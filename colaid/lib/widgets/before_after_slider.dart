@@ -59,13 +59,10 @@ class _BottomSliderCompareState extends State<BottomSliderCompare> {
 
                   // Divider line (moves left → right)
                   Positioned(
-                    left: width * value - 1,
+                    left: width * value - 0.25,
                     top: 40,
                     bottom: 40,
-                    child: Container(
-                      width: 2,
-                      color: Colors.white70,
-                    ),
+                    child: Container(width: 0.5, color: Colors.white54),
                   ),
                 ],
               ),
@@ -73,10 +70,7 @@ class _BottomSliderCompareState extends State<BottomSliderCompare> {
 
             // BOTTOM SLIDER
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 12,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               child: Slider(
                 value: value,
                 min: 0,

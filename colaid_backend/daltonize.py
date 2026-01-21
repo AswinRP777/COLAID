@@ -45,28 +45,31 @@ def daltonize(image_bgr, defect):
         sim = img @ PROTANOPIA.T
         error = img - sim
         correction = np.zeros_like(img)
-        correction[..., 1] = error[..., 0] * 0.7
-        correction[..., 2] = error[..., 0] * 0.3
+        # Distribute Red error primarily to Blue for better visibility
+        correction[..., 1] = error[..., 0] * 0.7  # Green
+        correction[..., 2] = error[..., 0] * 1.0  # Blue (Stronger)
 
     elif defect == "deuteranopia":
         sim = img @ DEUTERANOPIA.T
         error = img - sim
         correction = np.zeros_like(img)
-        correction[..., 0] = error[..., 1] * 0.6
-        correction[..., 2] = error[..., 1] * 0.4
+        # Distribute Green error primarily to Red
+        correction[..., 0] = error[..., 1] * 1.0  # Red (Stronger)
+        correction[..., 2] = error[..., 1] * 0.7  # Blue
 
     elif defect == "tritanopia":
         sim = img @ TRITANOPIA.T
         error = img - sim
         correction = np.zeros_like(img)
-        correction[..., 0] = error[..., 2] * 0.6
-        correction[..., 1] = error[..., 2] * 0.4
+        # Distribute Blue error primarily to Green for distinction
+        correction[..., 0] = error[..., 2] * 0.7  # Red
+        correction[..., 1] = error[..., 2] * 1.0  # Green (Stronger)
 
     else:
         return image_bgr
 
     # Apply correction gently (natural look)
-    out = img + correction * 0.6
+    out = img + correction * 1.5
     out = np.clip(out, 0, 1)
 
     out = (delinearize(out) * 255).astype(np.uint8)

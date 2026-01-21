@@ -4,7 +4,13 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import '../providers/theme_provider.dart';
 import 'results_history_page.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
+
 import '../services/user_service.dart';
+import '../services/bluetooth_service.dart';
+import 'package:location/location.dart' as loc;
+import 'eyewear_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -15,6 +21,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
+  bool _hasCheckedConnection = false;
 
   final List<Map<String, String>> _cards = [
     {
@@ -39,7 +46,9 @@ class _HomePageState extends State<HomePage> {
 
     if (pickedFile != null) {
       await UserService().setProfilePic(pickedFile.path);
-      setState(() {});
+      if (mounted) {
+        setState(() {});
+      }
     }
   }
 
@@ -97,9 +106,13 @@ class _HomePageState extends State<HomePage> {
                     email: UserService().userEmail ?? "",
                     name: newName,
                   );
-                  setState(() {});
+                  if (mounted) {
+                    setState(() {});
+                  }
                 }
-                Navigator.pop(context);
+                if (context.mounted) {
+                  Navigator.pop(context);
+                }
               },
               child: const Text("Save"),
             ),
@@ -107,6 +120,131 @@ class _HomePageState extends State<HomePage> {
         );
       },
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_hasCheckedConnection) {
+        _checkAndPromptEyewear();
+        _hasCheckedConnection = true;
+      }
+    });
+  }
+
+  Future<void> _checkAndPromptEyewear() async {
+    // Check if already connected
+    if (ColaidBluetoothService().connectedDevice != null) return;
+
+    // Show Premium Dialog
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Icon(
+              Icons.visibility,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            const SizedBox(width: 10),
+            const Text("Connect Eyewear"),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              "Experience the full potential of Colaid. Connect your smart eyewear for real-time color correction and assistance.",
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+            const Row(
+              children: [
+                Icon(Icons.bluetooth, size: 20, color: Colors.grey),
+                SizedBox(width: 8),
+                Text("Bluetooth", style: TextStyle(color: Colors.grey)),
+                SizedBox(width: 16),
+                Icon(Icons.location_on, size: 20, color: Colors.grey),
+                SizedBox(width: 8),
+                Text("Location", style: TextStyle(color: Colors.grey)),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("Later"),
+          ),
+          FilledButton.icon(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _handleConnectEyewear();
+            },
+            icon: const Icon(Icons.link),
+            label: const Text("Connect Now"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handleConnectEyewear() async {
+    // 1. Turn on Bluetooth if off (Android only)
+    if (Platform.isAndroid) {
+      if (await FlutterBluePlus.adapterState.first ==
+          BluetoothAdapterState.off) {
+        try {
+          await FlutterBluePlus.turnOn();
+        } catch (e) {
+          debugPrint("Could not turn on Bluetooth: $e");
+        }
+      }
+
+      // Slight delay to ensure Bluetooth dialog/animation clears (if any)
+      await Future.delayed(const Duration(milliseconds: 500));
+    }
+
+    // 2. Check & Request Location Permission & Service
+    //    We need permission 'WhenInUse' or 'Always' before we can request the service to be enabled.
+    var locStatus = await Permission.location.status;
+    if (!locStatus.isGranted) {
+      locStatus = await Permission.location.request();
+    }
+
+    if (locStatus.isGranted) {
+      // Permission granted, now check if GPS is actually on
+      final location = loc.Location();
+      bool serviceEnabled = await location.serviceEnabled();
+      if (!serviceEnabled) {
+        serviceEnabled = await location.requestService();
+        if (!serviceEnabled) {
+          debugPrint("User denied enabling location service.");
+          // We could return here, OR we could navigate anyway and let the scan fail/prompt again.
+          // But strict compliance usually means we return.
+          // However, user complained "it is not go to the connect eyewear page".
+          // So let's navigate anyway to avoid getting stuck?
+          // Actually, if service is disabled, scanning won't work.
+          // Let's TRY to navigate so they verify status on the next page.
+        }
+      }
+    } else {
+      debugPrint("Location permission denied.");
+      // If permission is denied, we can't scan.
+      // But maybe navigate anyway to let them see the "Scan" button which might re-trigger?
+    }
+
+    // 3. Navigate
+    if (mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const EyewearPage()),
+      );
+    }
   }
 
   @override
@@ -185,7 +323,10 @@ class _HomePageState extends State<HomePage> {
                                         leading: const Icon(Icons.info_outline),
                                         title: Text(n.message),
                                         subtitle: Text(
-                                          "${n.timestamp.toLocal().toString().split('.')[0]}",
+                                          n.timestamp
+                                              .toLocal()
+                                              .toString()
+                                              .split('.')[0],
                                           style: const TextStyle(fontSize: 12),
                                         ),
                                       ),
@@ -266,7 +407,7 @@ class _HomePageState extends State<HomePage> {
                       UserService().userEmail ?? 'user@example.com',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -276,10 +417,10 @@ class _HomePageState extends State<HomePage> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.4),
+                          color: Colors.white.withValues(alpha: 0.4),
                         ),
                       ),
                       child: Row(
@@ -443,7 +584,7 @@ class _HomePageState extends State<HomePage> {
                     vertical: 8,
                   ),
                   leading: CircleAvatar(
-                    backgroundColor: cs.primary.withOpacity(0.12),
+                    backgroundColor: cs.primary.withValues(alpha: 0.12),
                     child: Icon(icons[index], color: cs.primary),
                   ),
                   title: Text(c['title'] ?? ''),
@@ -561,7 +702,9 @@ class _HomePageState extends State<HomePage> {
                   child: GestureDetector(
                     onTap: () async {
                       await UserService().removeProfilePic();
-                      setState(() {});
+                      if (mounted) {
+                        setState(() {});
+                      }
                     },
                     child: Container(
                       padding: const EdgeInsets.all(4),

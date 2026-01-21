@@ -24,7 +24,7 @@ class UserService {
   String? _userEmail;
   String? _userName;
   List<Map<String, dynamic>> _testResults = [];
-  
+
   // Notifications List
   final List<NotificationItem> _notifications = [];
 
@@ -35,6 +35,9 @@ class UserService {
   static const _nameKey = 'user_name';
   static const _resultsKey = 'test_results';
   static const _profilePicKey = 'profile_pic_path';
+  static const _cookieKey = 'auth_cookie'; // New key
+
+  String? _authCookie; // Store the session cookie
 
   /// Call this once at app startup (before runApp)
   Future<void> init() async {
@@ -42,7 +45,8 @@ class UserService {
     _userEmail = prefs.getString(_emailKey);
     _userName = prefs.getString(_nameKey);
     _profilePicPath = prefs.getString(_profilePicKey);
-    
+    _authCookie = prefs.getString(_cookieKey); // Load cookie
+
     final resultsString = prefs.getString(_resultsKey);
     if (resultsString != null) {
       try {
@@ -52,9 +56,9 @@ class UserService {
         _testResults = [];
       }
     }
-    
+
     if (_userEmail != null) {
-        addNotification("Welcome back! Session restored.", countsForBadge: true);
+      addNotification("Welcome back! Session restored.", countsForBadge: true);
     }
   }
 
@@ -66,11 +70,14 @@ class UserService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_emailKey, _userEmail!);
     await prefs.setString(_nameKey, _userName!);
-    
+
     // Clear old "Logged in" notifications to keep badge at 1 max for login events
     _notifications.removeWhere((n) => n.message.startsWith("Logged in"));
-    
-    addNotification("Logged in at ${DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now())}", countsForBadge: true);
+
+    addNotification(
+      "Logged in at ${DateFormat('yyyy-MM-dd HH:mm').format(DateTime.now())}",
+      countsForBadge: true,
+    );
   }
 
   Future<void> setProfilePic(String path) async {
@@ -88,7 +95,7 @@ class UserService {
     // Notify with BADGE
     addNotification("Profile picture removed", countsForBadge: true);
   }
-  
+
   /// Save a new test result with full details
   Future<void> saveTestResult(
     String type,
@@ -97,7 +104,9 @@ class UserService {
     Map<int, String> userAnswers,
   ) async {
     // Convert Map<int, String> to Map<String, String> for JSON
-    final answersStringKey = userAnswers.map((key, value) => MapEntry(key.toString(), value));
+    final answersStringKey = userAnswers.map(
+      (key, value) => MapEntry(key.toString(), value),
+    );
 
     final result = {
       'date': DateTime.now().toIso8601String(),
@@ -106,20 +115,25 @@ class UserService {
       'plates': plates,
       'userAnswers': answersStringKey,
     };
-    
+
     _testResults.insert(0, result); // Add to top
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_resultsKey, jsonEncode(_testResults));
-    
+
     // Trigger notification
-    addNotification("Ishihara Test Completed at ${DateFormat('HH:mm').format(DateTime.now())}", countsForBadge: false);
+    addNotification(
+      "Ishihara Test Completed at ${DateFormat('HH:mm').format(DateTime.now())}",
+      countsForBadge: false,
+    );
   }
 
   /// Delete specific test results by date
   Future<void> deleteTestResults(Set<String> datesToDelete) async {
-    _testResults.removeWhere((result) => datesToDelete.contains(result['date']));
-    
+    _testResults.removeWhere(
+      (result) => datesToDelete.contains(result['date']),
+    );
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_resultsKey, jsonEncode(_testResults));
   }
@@ -128,9 +142,20 @@ class UserService {
     return List.from(_testResults);
   }
 
+  Future<void> setAuthCookie(String? cookie) async {
+    _authCookie = cookie;
+    final prefs = await SharedPreferences.getInstance();
+    if (cookie != null) {
+      await prefs.setString(_cookieKey, cookie);
+    } else {
+      await prefs.remove(_cookieKey);
+    }
+  }
+
   String? get userEmail => _userEmail;
   String? get userName => _userName;
   String? get profilePicPath => _profilePicPath;
+  String? get authCookie => _authCookie; // Getter for cookie
 
   bool get isLoggedIn => _userEmail != null;
 
@@ -155,6 +180,7 @@ class UserService {
     _userEmail = null;
     _userName = null;
     _profilePicPath = null;
+    _authCookie = null; // Clear cookie from memory
     _testResults = [];
     _notifications.clear();
 
@@ -163,16 +189,20 @@ class UserService {
     await prefs.remove(_nameKey);
     await prefs.remove(_resultsKey);
     await prefs.remove(_profilePicKey);
+    await prefs.remove(_cookieKey); // Clear cookie from storage
   }
 
   // --- Notification Methods ---
 
   void addNotification(String message, {bool countsForBadge = false}) {
-    _notifications.insert(0, NotificationItem(
-      message: message,
-      timestamp: DateTime.now(),
-      countsForBadge: countsForBadge
-    ));
+    _notifications.insert(
+      0,
+      NotificationItem(
+        message: message,
+        timestamp: DateTime.now(),
+        countsForBadge: countsForBadge,
+      ),
+    );
   }
 
   void removeNotification(int index) {
@@ -184,16 +214,16 @@ class UserService {
   int getUnreadBadgeCount() {
     return _notifications.where((n) => n.countsForBadge).length;
   }
-  
+
   void markNotificationsAsRead() {
     for (int i = 0; i < _notifications.length; i++) {
-        if (_notifications[i].countsForBadge) {
-             _notifications[i] = NotificationItem(
-            message: _notifications[i].message,
-            timestamp: _notifications[i].timestamp,
-            countsForBadge: false,
-          );
-        }
+      if (_notifications[i].countsForBadge) {
+        _notifications[i] = NotificationItem(
+          message: _notifications[i].message,
+          timestamp: _notifications[i].timestamp,
+          countsForBadge: false,
+        );
+      }
     }
   }
 

@@ -49,10 +49,7 @@ class _SavedImagesPageState extends State<SavedImagesPage> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text(
-              "Delete",
-              style: TextStyle(color: Colors.red),
-            ),
+            child: const Text("Delete", style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -66,30 +63,27 @@ class _SavedImagesPageState extends State<SavedImagesPage> {
         images.remove(file);
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Image deleted")),
-      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Image deleted")));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Delete failed: $e")),
-      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Delete failed: $e")));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Saved Images"),
-      ),
+      appBar: AppBar(title: const Text("Saved Images")),
       body: images.isEmpty
-          ? const Center(
-              child: Text("No saved images yet"),
-            )
+          ? const Center(child: Text("No saved images yet"))
           : GridView.builder(
               padding: const EdgeInsets.all(10),
-              gridDelegate:
-                  const SliverGridDelegateWithFixedCrossAxisCount(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
                 crossAxisSpacing: 10,
                 mainAxisSpacing: 10,
@@ -158,12 +152,8 @@ class FullImageView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-      ),
-      body: Center(
-        child: Image.file(imageFile),
-      ),
+      appBar: AppBar(backgroundColor: Colors.transparent),
+      body: Center(child: Image.file(imageFile)),
     );
   }
 }

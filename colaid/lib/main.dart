@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart'; // import dotenv
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart'; // created by flutterfire configure
 import 'package:google_fonts/google_fonts.dart';
@@ -11,19 +12,18 @@ import 'pages/welcome_page.dart';
 import 'pages/login_page.dart';
 import 'pages/register_page.dart';
 import 'pages/home_page.dart';
-import 'pages/ishihara_test_page.dart'; 
-import 'pages/settings_page.dart';      
-import 'pages/camera_page.dart';        
+import 'pages/ishihara_test_page.dart';
+import 'pages/settings_page.dart';
+import 'pages/camera_page.dart';
 import 'pages/legend_page.dart';
-import 'pages/results_history_page.dart';        
+import 'pages/results_history_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env"); // load environment variables
 
   // Initialize Firebase
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Initialize UserService to load persisted user data
   await UserService().init();
@@ -42,29 +42,23 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
+
     bool isHighContrast = themeProvider.contrastMode == 'High Contrast';
 
-    ColorScheme lightScheme = isHighContrast 
-        ? const ColorScheme.highContrastLight() 
+    ColorScheme lightScheme = isHighContrast
+        ? const ColorScheme.highContrastLight()
         : ColorScheme.fromSeed(seedColor: Colors.deepPurple);
 
-    ColorScheme darkScheme = isHighContrast 
-        ? const ColorScheme.highContrastDark() 
+    ColorScheme darkScheme = isHighContrast
+        ? const ColorScheme.highContrastDark()
         : ColorScheme.fromSeed(
             seedColor: Colors.deepPurple,
             brightness: Brightness.dark,
           );
 
-    final baseTheme = ThemeData(
-      colorScheme: lightScheme,
-      useMaterial3: true,
-    );
+    final baseTheme = ThemeData(colorScheme: lightScheme, useMaterial3: true);
 
-    final darkTheme = ThemeData(
-      colorScheme: darkScheme,
-      useMaterial3: true,
-    );
+    final darkTheme = ThemeData(colorScheme: darkScheme, useMaterial3: true);
 
     return MaterialApp(
       title: 'COLAID',
@@ -74,7 +68,7 @@ class MyApp extends StatelessWidget {
         textTheme: GoogleFonts.interTextTheme(baseTheme.textTheme),
       ),
       darkTheme: darkTheme.copyWith(
-         textTheme: GoogleFonts.interTextTheme(darkTheme.textTheme),
+        textTheme: GoogleFonts.interTextTheme(darkTheme.textTheme),
       ),
       initialRoute: '/',
       builder: (context, child) {
@@ -90,9 +84,9 @@ class MyApp extends StatelessWidget {
 
         // Apply Text Scaler
         return MediaQuery(
-          data: MediaQuery.of(context).copyWith(
-            textScaler: TextScaler.linear(textScaleFactor),
-          ),
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.linear(textScaleFactor)),
           child: currentChild,
         );
       },

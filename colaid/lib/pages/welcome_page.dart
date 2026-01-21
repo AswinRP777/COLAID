@@ -1,5 +1,10 @@
 // lib/pages/welcome_page.dart
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:provider/provider.dart';
+import '../services/user_service.dart';
+import '../providers/theme_provider.dart';
 
 class WelcomePage extends StatefulWidget {
   const WelcomePage({super.key});
@@ -11,6 +16,7 @@ class _WelcomePageState extends State<WelcomePage>
     with SingleTickerProviderStateMixin {
   late final AnimationController _anim;
   late final Animation<double> _pulse;
+  bool _loading = false;
 
   @override
   void initState() {
@@ -31,6 +37,60 @@ class _WelcomePageState extends State<WelcomePage>
     super.dispose();
   }
 
+  void _guestLogin() async {
+    setState(() => _loading = true);
+
+    try {
+      final response = await http.post(
+        Uri.parse('${dotenv.env['API_URL']}/guest-login'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (!mounted) return;
+      setState(() => _loading = false);
+
+      if (response.statusCode == 200) {
+        // Save user info - specific for Guest
+        await UserService().setUserData(email: 'Guest');
+
+        // Reset/Reload Settings for this (Guest) user
+        if (mounted) {
+          await Provider.of<ThemeProvider>(context, listen: false).refresh();
+        }
+
+        // Save Session Cookie
+        String? rawCookie = response.headers['set-cookie'];
+        if (rawCookie != null) {
+          int index = rawCookie.indexOf(';');
+          String cookie = (index == -1)
+              ? rawCookie
+              : rawCookie.substring(0, index);
+          await UserService().setAuthCookie(cookie);
+        }
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Signed in as Guest')));
+
+        // Navigate to HomePage
+        Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Guest login failed')));
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Connection error: $e')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -47,7 +107,7 @@ class _WelcomePageState extends State<WelcomePage>
                 colors: [
                   cs.primary.withAlpha(40),
                   cs.secondary.withAlpha(30),
-                  cs.background,
+                  cs.surface,
                 ],
                 radius: 1.0,
                 focal: Alignment.topLeft,
@@ -118,7 +178,7 @@ class _WelcomePageState extends State<WelcomePage>
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.w700,
-            color: cs.onBackground,
+            color: cs.onSurface,
           ),
         ),
         const SizedBox(height: 8),
@@ -126,7 +186,7 @@ class _WelcomePageState extends State<WelcomePage>
           'A collaborative platform for quick aid & community support. Sign in to access your dashboard or create a new account.',
           style: TextStyle(
             fontSize: 15,
-            color: cs.onBackground.withOpacity(0.75),
+            color: cs.onSurface.withValues(alpha: 0.75),
           ),
           textAlign: TextAlign.center,
         ),
@@ -163,12 +223,13 @@ class _WelcomePageState extends State<WelcomePage>
           ),
         ),
         const SizedBox(height: 14),
-        TextButton(
-          onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Continue as guest (demo)')),
-          ),
-          child: const Text('Continue as guest'),
-        ),
+        const SizedBox(height: 14),
+        _loading
+            ? const CircularProgressIndicator()
+            : TextButton(
+                onPressed: _guestLogin,
+                child: const Text('Continue as guest'),
+              ),
       ],
     );
   }

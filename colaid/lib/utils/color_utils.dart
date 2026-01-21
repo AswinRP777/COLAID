@@ -1,9 +1,9 @@
 import 'dart:ui';
 
 String getColorName(Color color) {
-  final r = color.red / 255.0;
-  final g = color.green / 255.0;
-  final b = color.blue / 255.0;
+  final r = color.r;
+  final g = color.g;
+  final b = color.b;
 
   final maxC = [r, g, b].reduce((a, b) => a > b ? a : b);
   final minC = [r, g, b].reduce((a, b) => a < b ? a : b);

@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:provider/provider.dart';
 import '../services/user_service.dart';
+import '../providers/theme_provider.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -18,20 +23,111 @@ class _LoginPageState extends State<LoginPage> {
     _form.currentState?.save();
     setState(() => _loading = true);
 
-    await Future.delayed(const Duration(seconds: 1)); // simulate network
+    try {
+      final response = await http.post(
+        Uri.parse('${dotenv.env['API_URL']}/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'username': _email, 'password': _password}),
+      );
 
-    setState(() => _loading = false);
-    
-    // Save user info
-    await UserService().setUserData(email: _email);
+      if (!mounted) return;
+      setState(() => _loading = false);
 
-    // Show SnackBar
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Signed in as $_email (demo)')),
-    );
+      if (response.statusCode == 200) {
+        // Save user info
+        await UserService().setUserData(email: _email);
 
-    // Navigate to HomePage
-    Navigator.pushReplacementNamed(context, '/home');
+        // Reset/Reload Settings for this user
+        if (mounted) {
+          await Provider.of<ThemeProvider>(context, listen: false).refresh();
+        }
+
+        // Save Session Cookie
+        String? rawCookie = response.headers['set-cookie'];
+        if (rawCookie != null) {
+          int index = rawCookie.indexOf(';');
+          String cookie = (index == -1)
+              ? rawCookie
+              : rawCookie.substring(0, index);
+          await UserService().setAuthCookie(cookie);
+        }
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Signed in as $_email')));
+
+        // Navigate to HomePage
+        Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        final msg = jsonDecode(response.body)['error'] ?? 'Login failed';
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $msg')));
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Connection error: $e')));
+    }
+  }
+
+  void _guestLogin() async {
+    setState(() => _loading = true);
+
+    try {
+      final response = await http.post(
+        Uri.parse('${dotenv.env['API_URL']}/guest-login'),
+        headers: {'Content-Type': 'application/json'},
+      );
+
+      if (!mounted) return;
+      setState(() => _loading = false);
+
+      if (response.statusCode == 200) {
+        // Save user info - specific for Guest
+        await UserService().setUserData(email: 'Guest');
+
+        // Reset/Reload Settings for this user
+        if (mounted) {
+          await Provider.of<ThemeProvider>(context, listen: false).refresh();
+        }
+
+        // Save Session Cookie
+        String? rawCookie = response.headers['set-cookie'];
+        if (rawCookie != null) {
+          int index = rawCookie.indexOf(';');
+          String cookie = (index == -1)
+              ? rawCookie
+              : rawCookie.substring(0, index);
+          await UserService().setAuthCookie(cookie);
+        }
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Signed in as Guest')));
+
+        // Navigate to HomePage
+        Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Guest login failed')));
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Connection error: $e')));
+    }
   }
 
   @override
@@ -66,8 +162,9 @@ class _LoginPageState extends State<LoginPage> {
                       TextFormField(
                         decoration: const InputDecoration(labelText: 'Email'),
                         keyboardType: TextInputType.emailAddress,
-                        validator: (v) =>
-                            (v == null || !v.contains('@')) ? 'Enter a valid email' : null,
+                        validator: (v) => (v == null || !v.contains('@'))
+                            ? 'Enter a valid email'
+                            : null,
                         onSaved: (v) => _email = v?.trim() ?? '',
                       ),
                       const SizedBox(height: 12),
@@ -75,13 +172,19 @@ class _LoginPageState extends State<LoginPage> {
                         decoration: InputDecoration(
                           labelText: 'Password',
                           suffixIcon: IconButton(
-                            icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
-                            onPressed: () => setState(() => _obscure = !_obscure),
+                            icon: Icon(
+                              _obscure
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                            ),
+                            onPressed: () =>
+                                setState(() => _obscure = !_obscure),
                           ),
                         ),
                         obscureText: _obscure,
-                        validator: (v) =>
-                            (v == null || v.length < 6) ? 'Minimum 6 characters' : null,
+                        validator: (v) => (v == null || v.length < 6)
+                            ? 'Minimum 6 characters'
+                            : null,
                         onSaved: (v) => _password = v ?? '',
                       ),
                       const SizedBox(height: 18),
@@ -105,10 +208,22 @@ class _LoginPageState extends State<LoginPage> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           TextButton(
-                            onPressed: () => Navigator.pushReplacementNamed(context, '/register'),
-                            child: const Text("Don't have an account? Register"),
+                            onPressed: () => Navigator.pushReplacementNamed(
+                              context,
+                              '/register',
+                            ),
+                            child: const Text(
+                              "Don't have an account? Register",
+                            ),
                           ),
                         ],
+                      ),
+                      TextButton(
+                        onPressed: _loading ? null : _guestLogin,
+                        child: const Text(
+                          "Continue as Guest",
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ],
                   ),

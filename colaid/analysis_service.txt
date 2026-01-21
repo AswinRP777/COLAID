@@ -1,0 +1,14 @@
+Analyzing bluetooth_service.dart...                             
+
+   info - The constant name 'SERVICE_UUID' isn't a lowerCamelCase identifier - lib\services\bluetooth_service.dart:32:23 - constant_identifier_names
+   info - The constant name 'RX_CHARACTERISTIC_UUID' isn't a lowerCamelCase identifier - lib\services\bluetooth_service.dart:33:23 - constant_identifier_names
+   info - The constant name 'TX_CHARACTERISTIC_UUID' isn't a lowerCamelCase identifier - lib\services\bluetooth_service.dart:35:23 - constant_identifier_names
+   info - Don't invoke 'print' in production code - lib\services\bluetooth_service.dart:67:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\bluetooth_service.dart:75:7 - avoid_print
+  error - The named parameter 'license' is required, but there's no corresponding argument - lib\services\bluetooth_service.dart:92:20 - missing_required_argument
+   info - Don't invoke 'print' in production code - lib\services\bluetooth_service.dart:104:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\bluetooth_service.dart:142:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\bluetooth_service.dart:151:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\bluetooth_service.dart:153:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\bluetooth_service.dart:156:7 - avoid_print
+

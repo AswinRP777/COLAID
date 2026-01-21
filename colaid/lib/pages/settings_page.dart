@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
 import '../services/user_service.dart';
+import 'eyewear_page.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -32,10 +36,13 @@ class SettingsPage extends StatelessWidget {
               children: [
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text("Dark Mode",
-                      style: TextStyle(fontWeight: FontWeight.w600)),
-                  subtitle:
-                      const Text("Use dark theme for better night viewing"),
+                  title: const Text(
+                    "Dark Mode",
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  subtitle: const Text(
+                    "Use dark theme for better night viewing",
+                  ),
                   secondary: const Icon(Icons.dark_mode_outlined),
                   value: themeProvider.isDark,
                   onChanged: (val) {
@@ -50,20 +57,23 @@ class SettingsPage extends StatelessWidget {
             _buildSectionCard(
               context,
               title: "Color Vision Settings",
-              subtitle:
-                  "Customize color correction based on your vision type",
+              subtitle: "Customize color correction based on your vision type",
               icon: Icons.visibility_outlined,
               children: [
                 const SizedBox(height: 12),
-                const Text("Color Vision Deficiency Type",
-                    style: TextStyle(fontWeight: FontWeight.w600)),
+                const Text(
+                  "Color Vision Deficiency Type",
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
                 const SizedBox(height: 8),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   decoration: BoxDecoration(
-                    color: cs.surfaceVariant.withOpacity(0.5),
+                    color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey.withOpacity(0.3)),
+                    border: Border.all(
+                      color: Colors.grey.withValues(alpha: 0.3),
+                    ),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<CvdType>(
@@ -76,16 +86,21 @@ class SettingsPage extends StatelessWidget {
                       },
                       items: const [
                         DropdownMenuItem(
-                            value: CvdType.none, child: Text("None")),
+                          value: CvdType.none,
+                          child: Text("None"),
+                        ),
                         DropdownMenuItem(
-                            value: CvdType.protanopia,
-                            child: Text("Protanopia (Red-Green)")),
+                          value: CvdType.protanopia,
+                          child: Text("Protanopia (Red-Green)"),
+                        ),
                         DropdownMenuItem(
-                            value: CvdType.deuteranopia,
-                            child: Text("Deuteranopia (Red-Green)")),
+                          value: CvdType.deuteranopia,
+                          child: Text("Deuteranopia (Red-Green)"),
+                        ),
                         DropdownMenuItem(
-                            value: CvdType.tritanopia,
-                            child: Text("Tritanopia (Blue-Yellow)")),
+                          value: CvdType.tritanopia,
+                          child: Text("Tritanopia (Blue-Yellow)"),
+                        ),
                       ],
                     ),
                   ),
@@ -108,8 +123,10 @@ class SettingsPage extends StatelessWidget {
               children: [
                 SwitchListTile(
                   contentPadding: EdgeInsets.zero,
-                  title: const Text("Audio Alerts",
-                      style: TextStyle(fontWeight: FontWeight.w600)),
+                  title: const Text(
+                    "Audio Alerts",
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
                   subtitle: const Text("Play sound when colors are detected"),
                   value: themeProvider.audioAlerts,
                   onChanged: (val) {
@@ -118,8 +135,10 @@ class SettingsPage extends StatelessWidget {
                 ),
                 const Divider(),
                 const SizedBox(height: 8),
-                const Text("Font Size",
-                    style: TextStyle(fontWeight: FontWeight.w600)),
+                const Text(
+                  "Font Size",
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
                 const SizedBox(height: 8),
                 _buildDropdown(
                   context,
@@ -128,8 +147,10 @@ class SettingsPage extends StatelessWidget {
                   onChanged: (val) => themeProvider.setFontSize(val!),
                 ),
                 const SizedBox(height: 16),
-                const Text("Contrast Mode",
-                    style: TextStyle(fontWeight: FontWeight.w600)),
+                const Text(
+                  "Contrast Mode",
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
                 const SizedBox(height: 8),
                 _buildDropdown(
                   context,
@@ -152,20 +173,93 @@ class SettingsPage extends StatelessWidget {
                   onPressed: () {
                     // Sign out logic
                     UserService().clearUserData();
+                    Provider.of<ThemeProvider>(
+                      context,
+                      listen: false,
+                    ).refresh();
                     Navigator.pushNamedAndRemoveUntil(
-                        context, '/', (route) => false);
+                      context,
+                      '/',
+                      (route) => false,
+                    );
                   },
                   icon: const Icon(Icons.logout),
                   label: const Text("Sign Out"),
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size(double.infinity, 48),
+                    foregroundColor: const Color(0xFFDC143C),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: () => _showChangePasswordDialog(context),
+                  icon: const Icon(Icons.lock_reset),
+                  label: const Text("Change Password"),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 48),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: () => _showDeleteAccountDialog(context),
+                  icon: const Icon(Icons.delete_forever),
+                  label: const Text("Delete Account"),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 48),
+                    foregroundColor: Colors.red,
+                    side: const BorderSide(color: Colors.red),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
 
-            // About Card
+            _buildSectionCard(
+              context,
+              title: "Eyewear Connection",
+              subtitle: "Connect to your COLAID glasses",
+              icon: Icons.bluetooth,
+              children: [
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const EyewearPage(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.bluetooth_audio),
+                  label: const Text("Manage Connection"),
+                  style: OutlinedButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 48),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // Reset Button
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () {
+                  themeProvider.resetToDefaults();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Settings reset to default")),
+                  );
+                },
+                style: FilledButton.styleFrom(
+                  backgroundColor: const Color(0xFFDC143C), // Crimson red
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                child: const Text("Reset to Default Settings"),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // About Card - Moved to Bottom
             _buildSectionCard(
               context,
               title: "About COLAID",
@@ -176,48 +270,37 @@ class SettingsPage extends StatelessWidget {
                   style: TextStyle(color: Colors.grey),
                 ),
                 const SizedBox(height: 16),
-                const Text("Version 1.0.0",
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                const Text("Built with accessibility and user experience in mind",
-                    style: TextStyle(color: Colors.grey, fontSize: 12)),
+                const Text(
+                  "Version 1.0.0",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const Text(
+                  "Built with accessibility and user experience in mind",
+                  style: TextStyle(color: Colors.grey, fontSize: 12),
+                ),
               ],
             ),
             const SizedBox(height: 24),
 
             // Reset Button
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton(
-                onPressed: () {
-                   themeProvider.resetToDefaults();
-                   ScaffoldMessenger.of(context).showSnackBar(
-                     const SnackBar(content: Text("Settings reset to default")),
-                   );
-                },
-                style: FilledButton.styleFrom(
-                  backgroundColor: const Color(0xFFDC143C), // Crimson red
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                ),
-                child: const Text("Reset to Default Settings"),
-              ),
-            ),
-            const SizedBox(height: 32),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildSectionCard(BuildContext context,
-      {required String title,
-      String? subtitle,
-      IconData? icon,
-      required List<Widget> children}) {
+  Widget _buildSectionCard(
+    BuildContext context, {
+    required String title,
+    String? subtitle,
+    IconData? icon,
+    required List<Widget> children,
+  }) {
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.withOpacity(0.2)),
+        side: BorderSide(color: Colors.grey.withValues(alpha: 0.2)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -226,29 +309,42 @@ class SettingsPage extends StatelessWidget {
           children: [
             Row(
               children: [
-                 if (icon != null) ...[
-                   Icon(icon, size: 20, color: Theme.of(context).colorScheme.primary),
-                   const SizedBox(width: 8),
-                 ],
+                if (icon != null) ...[
+                  Icon(
+                    icon,
+                    size: 20,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  const SizedBox(width: 8),
+                ],
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(title,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
                       if (subtitle != null) ...[
                         const SizedBox(height: 4),
-                        Text(subtitle,
-                            style: const TextStyle(
-                                color: Colors.grey, fontSize: 12)),
+                        Text(
+                          subtitle,
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontSize: 12,
+                          ),
+                        ),
                       ],
                     ],
                   ),
                 ),
               ],
             ),
-            if (children.isNotEmpty) const SizedBox(height: 8), // Header spacing
+            if (children.isNotEmpty)
+              const SizedBox(height: 8), // Header spacing
             ...children,
           ],
         ),
@@ -256,16 +352,20 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildDropdown(BuildContext context,
-      {required String value,
-      required List<String> items,
-      required Function(String?) onChanged}) {
+  Widget _buildDropdown(
+    BuildContext context, {
+    required String value,
+    required List<String> items,
+    required Function(String?) onChanged,
+  }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.5),
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(8),
-         border: Border.all(color: Colors.grey.withOpacity(0.3)),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
@@ -273,10 +373,7 @@ class SettingsPage extends StatelessWidget {
           value: value,
           onChanged: onChanged,
           items: items.map((String item) {
-            return DropdownMenuItem<String>(
-              value: item,
-              child: Text(item),
-            );
+            return DropdownMenuItem<String>(value: item, child: Text(item));
           }).toList(),
         ),
       ),
@@ -294,5 +391,244 @@ class SettingsPage extends StatelessWidget {
       case CvdType.none:
         return "Standard color vision";
     }
+  }
+
+  void _showChangePasswordDialog(BuildContext context) {
+    final passwordController = TextEditingController();
+    final confirmController = TextEditingController();
+    bool loading = false;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text("Change Password"),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: passwordController,
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      labelText: "New Password",
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: confirmController,
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      labelText: "Confirm Password",
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Cancel"),
+                ),
+                TextButton(
+                  onPressed: loading
+                      ? null
+                      : () async {
+                          final newPass = passwordController.text;
+                          final confirmPass = confirmController.text;
+
+                          if (newPass.length < 6) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("Password too short"),
+                              ),
+                            );
+                            return;
+                          }
+
+                          if (newPass != confirmPass) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text("Passwords do not match"),
+                              ),
+                            );
+                            return;
+                          }
+
+                          setState(() => loading = true);
+
+                          try {
+                            final cookie = UserService().authCookie;
+                            final headers = {
+                              'Content-Type': 'application/json',
+                              if (cookie != null) 'Cookie': cookie,
+                            };
+
+                            final response = await http.post(
+                              Uri.parse(
+                                "${dotenv.env['API_URL']}/reset-password",
+                              ),
+                              headers: headers,
+                              body: jsonEncode({'new_password': newPass}),
+                            );
+
+                            setState(() => loading = false);
+
+                            if (response.statusCode == 200) {
+                              if (context.mounted) {
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      "Password updated! Please login again.",
+                                    ),
+                                  ),
+                                );
+                                // Optional: Logout user to force re-login
+                                UserService().clearUserData();
+                                if (context.mounted) {
+                                  Provider.of<ThemeProvider>(
+                                    context,
+                                    listen: false,
+                                  ).refresh();
+                                }
+                                Navigator.pushNamedAndRemoveUntil(
+                                  context,
+                                  '/',
+                                  (route) => false,
+                                );
+                              }
+                            } else {
+                              if (context.mounted) {
+                                final msg =
+                                    jsonDecode(response.body)['error'] ??
+                                    'Update failed';
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text("Error: $msg")),
+                                );
+                              }
+                            }
+                          } catch (e) {
+                            setState(() => loading = false);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("Error: $e")),
+                              );
+                            }
+                          }
+                        },
+                  child: loading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text("Update"),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showDeleteAccountDialog(BuildContext context) {
+    bool loading = false;
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text("Delete Account"),
+              content: const Text(
+                "Are you sure you want to delete your account? This action cannot be undone.",
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text("Cancel"),
+                ),
+                TextButton(
+                  onPressed: loading
+                      ? null
+                      : () async {
+                          setState(() => loading = true);
+
+                          try {
+                            final cookie = UserService().authCookie;
+                            final headers = {
+                              'Content-Type': 'application/json',
+                              if (cookie != null) 'Cookie': cookie,
+                            };
+
+                            final response = await http.post(
+                              Uri.parse(
+                                "${dotenv.env['API_URL']}/delete-account",
+                              ),
+                              headers: headers,
+                            );
+
+                            setState(() => loading = false);
+
+                            if (response.statusCode == 200) {
+                              if (context.mounted) {
+                                Navigator.pop(context);
+                                UserService().clearUserData();
+                                if (context.mounted) {
+                                  Provider.of<ThemeProvider>(
+                                    context,
+                                    listen: false,
+                                  ).refresh();
+                                }
+                                Navigator.pushNamedAndRemoveUntil(
+                                  context,
+                                  '/',
+                                  (route) => false,
+                                );
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      "Account deleted successfully",
+                                    ),
+                                  ),
+                                );
+                              }
+                            } else {
+                              if (context.mounted) {
+                                final msg =
+                                    jsonDecode(response.body)['error'] ??
+                                    'Deletion failed';
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text("Error: $msg")),
+                                );
+                              }
+                            }
+                          } catch (e) {
+                            setState(() => loading = false);
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("Error: $e")),
+                              );
+                            }
+                          }
+                        },
+                  style: TextButton.styleFrom(foregroundColor: Colors.red),
+                  child: loading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text("Delete"),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 }

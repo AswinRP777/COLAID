@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:provider/provider.dart';
 import '../services/user_service.dart';
+import '../providers/theme_provider.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -19,18 +24,46 @@ class _RegisterPageState extends State<RegisterPage> {
     if (!(_form.currentState?.validate() ?? false)) return;
     _form.currentState?.save();
     setState(() => _loading = true);
-    await Future.delayed(const Duration(seconds: 1)); // simulate registration
-    
-    // Store user data in UserService
-    UserService().setUserData(email: _email);
-    
-    setState(() => _loading = false);
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Registered $_email (demo)')));
-    
-    // Navigate to HomePage after successful registration
-    Navigator.pushReplacementNamed(context, '/home');
+
+    try {
+      final response = await http.post(
+        Uri.parse('${dotenv.env['API_URL']}/register'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'username': _email, 'password': _password}),
+      );
+
+      setState(() => _loading = false);
+
+      if (response.statusCode == 201) {
+        // Automatically sign in locally
+        await UserService().setUserData(email: _email);
+
+        // Reset/Reload Settings for this new user
+        if (mounted) {
+          await Provider.of<ThemeProvider>(context, listen: false).refresh();
+        }
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Registered $_email')));
+
+        // Navigate to HomePage
+        Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        final msg = jsonDecode(response.body)['error'] ?? 'Registration failed';
+        if (!mounted) return;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $msg')));
+      }
+    } catch (e) {
+      setState(() => _loading = false);
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Connection error: $e')));
+    }
   }
 
   @override
@@ -38,7 +71,7 @@ class _RegisterPageState extends State<RegisterPage> {
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: cs.surfaceVariant,
+        backgroundColor: cs.surfaceContainerHighest,
         title: const Text('Create account'),
       ),
       body: Center(

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../services/user_service.dart';
-import 'camera_page.dart';
 import 'results_history_page.dart';
 
 class TestResultPage extends StatefulWidget {
@@ -48,7 +47,7 @@ class _TestResultPageState extends State<TestResultPage> {
 
   Future<void> _saveResult() async {
     try {
-      print("Saving test result: ${widget.plates.length} plates");
+      debugPrint("Saving test result: ${widget.plates.length} plates");
       await UserService().saveTestResult(
         widget.detectedType,
         _incorrectCount,
@@ -56,8 +55,8 @@ class _TestResultPageState extends State<TestResultPage> {
         widget.userAnswers,
       );
     } catch (e, stack) {
-      print("Error saving test result: $e");
-      print(stack);
+      debugPrint("Error saving test result: $e");
+      debugPrint(stack.toString());
     }
   }
 
@@ -100,11 +99,11 @@ class _TestResultPageState extends State<TestResultPage> {
             icon: const Icon(Icons.history),
             onPressed: () {
               Navigator.push(
-                context, 
-                MaterialPageRoute(builder: (_) => const ResultsHistoryPage())
+                context,
+                MaterialPageRoute(builder: (_) => const ResultsHistoryPage()),
               );
             },
-          )
+          ),
         ],
       ),
       body: SingleChildScrollView(
@@ -178,7 +177,10 @@ class _TestResultPageState extends State<TestResultPage> {
                       onPressed: () {
                         Navigator.pushReplacementNamed(context, '/camera');
                       },
-                      child: const Text("Proceed to Camera Page", style: TextStyle(fontSize: 16)),
+                      child: const Text(
+                        "Proceed to Camera Page",
+                        style: TextStyle(fontSize: 16),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -189,16 +191,18 @@ class _TestResultPageState extends State<TestResultPage> {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                       ),
                       onPressed: () {
-                         Navigator.push(
-                          context, 
-                          MaterialPageRoute(builder: (_) => const ResultsHistoryPage())
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ResultsHistoryPage(),
+                          ),
                         );
                       },
                       child: const Text("View Test History"),
                     ),
                   ),
                 ] else ...[
-                   SizedBox(
+                  SizedBox(
                     width: double.infinity,
                     child: FilledButton.tonal(
                       style: FilledButton.styleFrom(

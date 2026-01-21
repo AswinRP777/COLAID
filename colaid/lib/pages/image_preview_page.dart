@@ -5,12 +5,15 @@ import 'package:flutter/rendering.dart';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart'; // import dotenv
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 
 import '../widgets/before_after_slider.dart';
 import '../utils/color_utils.dart';
 import 'saved_images_page.dart';
+import 'package:provider/provider.dart';
+import '../providers/theme_provider.dart';
 
 class ImagePreviewPage extends StatefulWidget {
   final File imageFile;
@@ -37,32 +40,32 @@ class _ImagePreviewPageState extends State<ImagePreviewPage> {
     setState(() => loading = true);
 
     try {
-      final request = http.MultipartRequest(
-        'POST',
-        Uri.parse("http://127.0.0.1:5000/daltonize"),
-      );
+      final url = "${dotenv.env['API_URL']}/daltonize";
+      debugPrint("🚀 SENDING TO: $url");
+
+      final request = http.MultipartRequest('POST', Uri.parse(url));
 
       request.fields['defect'] = selectedDefect;
       request.files.add(
-        await http.MultipartFile.fromPath(
-          'image',
-          widget.imageFile.path,
-        ),
+        await http.MultipartFile.fromPath('image', widget.imageFile.path),
       );
 
       final response = await request.send();
       final bytes = await response.stream.toBytes();
 
-      setState(() {
-        processedImage = bytes;
-        detectedColor = "";
-        loading = false;
-      });
+      if (mounted) {
+        setState(() {
+          processedImage = bytes;
+          detectedColor = "";
+          loading = false;
+        });
+      }
     } catch (e) {
-      setState(() => loading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
-      );
+      if (mounted) setState(() => loading = false);
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Error: $e")));
     }
   }
 
@@ -85,13 +88,15 @@ class _ImagePreviewPageState extends State<ImagePreviewPage> {
       final file = File(filePath);
       await file.writeAsBytes(processedImage!);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Image saved successfully")),
-      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Image saved successfully")));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Save failed: $e")),
-      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Save failed: $e")));
     }
   }
 
@@ -99,16 +104,18 @@ class _ImagePreviewPageState extends State<ImagePreviewPage> {
   Future<void> detectColor(TapDownDetails details) async {
     try {
       final boundary =
-          repaintKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+          repaintKey.currentContext!.findRenderObject()
+              as RenderRepaintBoundary;
+      final box = boundary as RenderBox;
 
       final ui.Image image = await boundary.toImage(pixelRatio: 1.0);
-      final byteData =
-          await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+      final byteData = await image.toByteData(
+        format: ui.ImageByteFormat.rawRgba,
+      );
 
       if (byteData == null) return;
+      if (!mounted) return;
 
-      final box =
-          repaintKey.currentContext!.findRenderObject() as RenderBox;
       final localPos = box.globalToLocal(details.globalPosition);
 
       final x = localPos.dx.toInt();
@@ -124,10 +131,9 @@ class _ImagePreviewPageState extends State<ImagePreviewPage> {
           final px = x + dx;
           final py = y + dy;
 
-          if (px < 0 ||
-              py < 0 ||
-              px >= image.width ||
-              py >= image.height) continue;
+          if (px < 0 || py < 0 || px >= image.width || py >= image.height) {
+            continue;
+          }
 
           final i = (py * image.width + px) * 4;
           rSum += byteData.getUint8(i);
@@ -144,12 +150,23 @@ class _ImagePreviewPageState extends State<ImagePreviewPage> {
       final color = Color.fromARGB(255, r, g, b);
       final name = getColorName(color);
 
-      setState(() {
-        detectedColor = name;
-      });
+      if (mounted) {
+        setState(() {
+          detectedColor = name;
+        });
+      }
 
       await flutterTts.stop();
-      await flutterTts.speak(name);
+
+      if (!mounted) return;
+      final audioAlerts = Provider.of<ThemeProvider>(
+        context,
+        listen: false,
+      ).audioAlerts;
+
+      if (audioAlerts) {
+        await flutterTts.speak(name);
+      }
     } catch (e) {
       debugPrint("Color detection error: $e");
     }
@@ -218,18 +235,24 @@ class _ImagePreviewPageState extends State<ImagePreviewPage> {
                   items: const [
                     DropdownMenuItem(
                       value: "protanopia",
-                      child: Text("Protanopia",
-                          style: TextStyle(color: Colors.white)),
+                      child: Text(
+                        "Protanopia",
+                        style: TextStyle(color: Colors.white),
+                      ),
                     ),
                     DropdownMenuItem(
                       value: "deuteranopia",
-                      child: Text("Deuteranopia",
-                          style: TextStyle(color: Colors.white)),
+                      child: Text(
+                        "Deuteranopia",
+                        style: TextStyle(color: Colors.white),
+                      ),
                     ),
                     DropdownMenuItem(
                       value: "tritanopia",
-                      child: Text("Tritanopia",
-                          style: TextStyle(color: Colors.white)),
+                      child: Text(
+                        "Tritanopia",
+                        style: TextStyle(color: Colors.white),
+                      ),
                     ),
                   ],
                   onChanged: (v) {
@@ -248,9 +271,7 @@ class _ImagePreviewPageState extends State<ImagePreviewPage> {
                   child: ElevatedButton.icon(
                     onPressed: loading ? null : processImage,
                     icon: const Icon(Icons.auto_fix_high),
-                    label: Text(
-                      loading ? "Processing..." : "Enhance Colors",
-                    ),
+                    label: Text(loading ? "Processing..." : "Enhance Colors"),
                   ),
                 ),
 

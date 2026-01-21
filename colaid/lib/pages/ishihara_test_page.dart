@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/theme_provider.dart';
+import '../services/bluetooth_service.dart';
 import 'test_result_page.dart';
 
 class IshiharaTestPage extends StatefulWidget {
@@ -69,9 +70,13 @@ class _IshiharaTestPageState extends State<IshiharaTestPage> {
         incorrectList.add(i + 1);
 
         int num = int.parse(correct);
-        if (num % 3 == 0) protan++;
-        else if (num % 3 == 1) deutan++;
-        else tritan++;
+        if (num % 3 == 0) {
+          protan++;
+        } else if (num % 3 == 1) {
+          deutan++;
+        } else {
+          tritan++;
+        }
       }
     }
 
@@ -92,6 +97,9 @@ class _IshiharaTestPageState extends State<IshiharaTestPage> {
     // Update Global Settings
     Provider.of<ThemeProvider>(context, listen: false).setCvdType(cvdType);
 
+    // Send to Eyewear
+    _sendToEyewear(type);
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(
@@ -104,14 +112,27 @@ class _IshiharaTestPageState extends State<IshiharaTestPage> {
     );
   }
 
+  Future<void> _sendToEyewear(String cvdType) async {
+    // Map full names to single chars for ESP32 simplicity
+    String code = "N"; // Normal
+    if (cvdType.contains("Protan")) {
+      code = "P";
+    } else if (cvdType.contains("Deutan")) {
+      code = "D";
+    } else if (cvdType.contains("Tritan")) {
+      code = "T";
+    }
+
+    await ColaidBluetoothService().sendCVDProfile(code);
+    debugPrint("Sent CVD Profile to Eyewear: $code");
+  }
+
   @override
   Widget build(BuildContext context) {
     final plate = _selectedPlates[_currentIndex];
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Ishihara Test (${_currentIndex + 1}/12)"),
-      ),
+      appBar: AppBar(title: Text("Ishihara Test (${_currentIndex + 1}/12)")),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -131,10 +152,7 @@ class _IshiharaTestPageState extends State<IshiharaTestPage> {
 
               const SizedBox(height: 20),
 
-              ElevatedButton(
-                onPressed: _saveAnswer,
-                child: const Text("Next"),
-              ),
+              ElevatedButton(onPressed: _saveAnswer, child: const Text("Next")),
             ],
           ),
         ),
