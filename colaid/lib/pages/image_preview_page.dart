@@ -180,6 +180,7 @@ class _ImagePreviewPageState extends State<ImagePreviewPage> {
       appBar: AppBar(
         title: const Text("Color Enhanced Image"),
         backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white,
       ),
       body: Column(
         children: [
