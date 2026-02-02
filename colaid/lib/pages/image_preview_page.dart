@@ -194,17 +194,20 @@ class _ImagePreviewPageState extends State<ImagePreviewPage> {
                     ? Center(
                         child: Image.file(
                           widget.imageFile,
-                          fit: BoxFit.contain,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
                         ),
                       )
                     : BottomSliderCompare(
                         before: Image.file(
                           widget.imageFile,
-                          fit: BoxFit.contain,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
                         ),
                         after: Image.memory(
                           processedImage!,
-                          fit: BoxFit.contain,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
                         ),
                       ),
               ),

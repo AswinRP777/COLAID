@@ -29,40 +29,71 @@ class _BottomSliderCompareState extends State<BottomSliderCompare> {
             Expanded(
               child: Stack(
                 children: [
-                  // BEFORE image (anchored to LEFT, opens from left)
+                  // AFTER image (full background, expanded)
+                  Positioned.fill(child: SizedBox.expand(child: widget.after)),
+
+                  // BEFORE image (clips from left based on slider value)
                   Positioned.fill(
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: ClipRect(
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          widthFactor: value,
-                          child: widget.before,
-                        ),
-                      ),
+                    child: ClipRect(
+                      clipper: _LeftClipper(value, width),
+                      child: SizedBox.expand(child: widget.before),
                     ),
                   ),
 
-                  // AFTER image (anchored to RIGHT, closes to right)
-                  Positioned.fill(
-                    child: Align(
-                      alignment: Alignment.centerRight,
-                      child: ClipRect(
-                        child: Align(
-                          alignment: Alignment.centerRight,
-                          widthFactor: 1.0 - value,
-                          child: widget.after,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // Divider line (moves left → right)
+                  // White divider line
                   Positioned(
-                    left: width * value - 0.25,
-                    top: 40,
-                    bottom: 40,
-                    child: Container(width: 0.5, color: Colors.white54),
+                    left: width * value - 1,
+                    top: 0,
+                    bottom: 0,
+                    child: Container(width: 2, color: Colors.white),
+                  ),
+
+                  // "Original" label - top left
+                  Positioned(
+                    top: 12,
+                    left: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black54,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Text(
+                        'Original',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // "Enhanced" label - top right
+                  Positioned(
+                    top: 12,
+                    right: 12,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black54,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Text(
+                        'Enhanced',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -88,4 +119,22 @@ class _BottomSliderCompareState extends State<BottomSliderCompare> {
       },
     );
   }
+}
+
+// Custom clipper that clips from the left side based on fraction
+class _LeftClipper extends CustomClipper<Rect> {
+  final double fraction;
+  final double containerWidth;
+
+  _LeftClipper(this.fraction, this.containerWidth);
+
+  @override
+  Rect getClip(Size size) {
+    return Rect.fromLTRB(0, 0, containerWidth * fraction, size.height);
+  }
+
+  @override
+  bool shouldReclip(_LeftClipper oldClipper) =>
+      oldClipper.fraction != fraction ||
+      oldClipper.containerWidth != containerWidth;
 }
