@@ -7,6 +7,7 @@ from pymongo import MongoClient
 from bson import ObjectId
 from models import User
 from dotenv import load_dotenv
+import certifi
 
 load_dotenv()
 
@@ -14,7 +15,11 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'fallback_secret')
 
 # MongoDB Atlas connection
-mongo_client = MongoClient(os.getenv('MONGODB_URI'))
+mongo_client = MongoClient(
+    os.getenv("MONGODB_URI"),
+    tls=True,
+    tlsCAFile=certifi.where()
+)
 db = mongo_client.get_default_database()  # Uses database from connection string
 try:
     db.list_collection_names()
@@ -44,6 +49,12 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 def test():
     print("🔥 PHONE REACHED BACKEND")
     return "Backend reachable"
+
+@app.route("/mongo-test")
+def mongo_test():
+    mongo_client.admin.command("ping")
+    return "MongoDB connected ✅"
+
 
 @app.route("/daltonize", methods=["POST"])
 def daltonize_api():
