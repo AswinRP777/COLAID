@@ -5,3 +5,4 @@ pillow
 flask-login
 python-dotenv
 pymongo
+gunicorn
