@@ -3,30 +3,43 @@ import cv2
 import os
 from daltonize import daltonize
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
-from models import db, User
+from pymongo import MongoClient
+from bson import ObjectId
+from models import User
 from dotenv import load_dotenv
 
 load_dotenv()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'fallback_secret')
-basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'colaid.db')
 
-db.init_app(app)
+# MongoDB Atlas connection
+mongo_client = MongoClient(os.getenv('MONGODB_URI'))
+db = mongo_client.get_default_database()  # Uses database from connection string
+try:
+    db.list_collection_names()
+    print("MongoDB connected to DB ✅")
+except Exception as e:
+    print("MongoDB error ❌", e)
+
+
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
-
-with app.app_context():
-    db.create_all()
+    try:
+        user_data = db.users.find_one({'_id': ObjectId(user_id)})
+        if user_data:
+            return User(user_data)
+    except:
+        pass
+    return None
 
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
 @app.route("/", methods=["GET"])
 def test():
     print("🔥 PHONE REACHED BACKEND")
@@ -84,13 +97,15 @@ def register():
     if not username or not password:
         return jsonify({"error": "Missing username or password"}), 400
 
-    if User.query.filter_by(username=username).first():
+    # Check if user exists
+    if db.users.find_one({'username': username}):
         return jsonify({"error": "Username already exists"}), 400
 
-    new_user = User(username=username)
+    # Create new user
+    new_user = User({'username': username})
     new_user.set_password(password)
-    db.session.add(new_user)
-    db.session.commit()
+    
+    db.users.insert_one(new_user.to_dict())
 
     return jsonify({"message": "User registered successfully"}), 201
 
@@ -100,11 +115,13 @@ def login():
     username = data.get('username')
     password = data.get('password')
 
-    user = User.query.filter_by(username=username).first()
+    user_data = db.users.find_one({'username': username})
 
-    if user and user.check_password(password):
-        login_user(user)
-        return jsonify({"message": "Login successful"}), 200
+    if user_data:
+        user = User(user_data)
+        if user.check_password(password):
+            login_user(user)
+            return jsonify({"message": "Login successful"}), 200
     
     return jsonify({"error": "Invalid credentials"}), 401
 
@@ -123,9 +140,14 @@ def reset_password():
     if not new_password or len(new_password) < 6:
         return jsonify({"error": "Password must be at least 6 characters"}), 400
 
-    # current_user is available because of @login_required
-    current_user.set_password(new_password)
-    db.session.commit()
+    # Update password in MongoDB
+    user = User({'_id': ObjectId(current_user.get_id())})
+    user.set_password(new_password)
+    
+    db.users.update_one(
+        {'_id': ObjectId(current_user.get_id())},
+        {'$set': {'password_hash': user.password_hash}}
+    )
 
     return jsonify({"message": "Password updated successfully"}), 200
 
@@ -133,26 +155,25 @@ def reset_password():
 @login_required
 def delete_account():
     try:
-        db.session.delete(current_user)
-        db.session.commit()
+        db.users.delete_one({'_id': ObjectId(current_user.get_id())})
         logout_user()
         return jsonify({"message": "Account deleted successfully"}), 200
     except Exception as e:
-        db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
 @app.route('/guest-login', methods=['POST'])
 def guest_login():
-    guest_user = User.query.filter_by(username='Guest').first()
+    guest_data = db.users.find_one({'username': 'Guest'})
     
-    if not guest_user:
+    if not guest_data:
         # Create a Guest user with a random high-entropy password
         import secrets
-        guest_user = User(username='Guest')
+        guest_user = User({'username': 'Guest'})
         guest_user.set_password(secrets.token_hex(16))
-        db.session.add(guest_user)
-        db.session.commit()
+        result = db.users.insert_one(guest_user.to_dict())
+        guest_data = db.users.find_one({'_id': result.inserted_id})
     
+    guest_user = User(guest_data)
     login_user(guest_user)
     return jsonify({"message": "Logged in as Guest", "username": "Guest"}), 200
 

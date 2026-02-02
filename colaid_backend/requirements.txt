@@ -2,6 +2,6 @@ flask
 opencv-python
 numpy<2.0.0
 pillow
-flask-sqlalchemy
 flask-login
 python-dotenv
+pymongo
