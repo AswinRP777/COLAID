@@ -36,8 +36,11 @@ class UserService {
   static const _resultsKey = 'test_results';
   static const _profilePicKey = 'profile_pic_path';
   static const _cookieKey = 'auth_cookie'; // New key
+  static const _emailHistoryKey =
+      'email_history'; // Store previous login emails
 
   String? _authCookie; // Store the session cookie
+  List<String> _emailHistory = []; // List of previously used emails
 
   /// Call this once at app startup (before runApp)
   Future<void> init() async {
@@ -46,6 +49,10 @@ class UserService {
     _userName = prefs.getString(_nameKey);
     _profilePicPath = prefs.getString(_profilePicKey);
     _authCookie = prefs.getString(_cookieKey); // Load cookie
+
+    // Load email history
+    final emailHistoryString = prefs.getStringList(_emailHistoryKey);
+    _emailHistory = emailHistoryString ?? [];
 
     final resultsString = prefs.getString(_resultsKey);
     if (resultsString != null) {
@@ -70,6 +77,21 @@ class UserService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_emailKey, _userEmail!);
     await prefs.setString(_nameKey, _userName!);
+
+    // Add email to history if it's not "Guest" and not already in history
+    if (email != 'Guest' && !_emailHistory.contains(email)) {
+      _emailHistory.insert(0, email); // Add to the beginning
+      // Keep only last 5 emails to avoid cluttering
+      if (_emailHistory.length > 5) {
+        _emailHistory = _emailHistory.sublist(0, 5);
+      }
+      await prefs.setStringList(_emailHistoryKey, _emailHistory);
+    } else if (email != 'Guest' && _emailHistory.contains(email)) {
+      // Move existing email to top of the list
+      _emailHistory.remove(email);
+      _emailHistory.insert(0, email);
+      await prefs.setStringList(_emailHistoryKey, _emailHistory);
+    }
 
     // Clear old "Logged in" notifications to keep badge at 1 max for login events
     _notifications.removeWhere((n) => n.message.startsWith("Logged in"));
@@ -156,8 +178,24 @@ class UserService {
   String? get userName => _userName;
   String? get profilePicPath => _profilePicPath;
   String? get authCookie => _authCookie; // Getter for cookie
+  List<String> get emailHistory =>
+      List.from(_emailHistory); // Get previous login emails
 
   bool get isLoggedIn => _userEmail != null;
+
+  /// Remove an email from history (e.g., if user wants to forget an account)
+  Future<void> removeEmailFromHistory(String email) async {
+    _emailHistory.remove(email);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_emailHistoryKey, _emailHistory);
+  }
+
+  /// Clear all email history
+  Future<void> clearEmailHistory() async {
+    _emailHistory.clear();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_emailHistoryKey);
+  }
 
   /// Convert "john.doe@example.com" → "John Doe"
   String _extractNameFromEmail(String email) {

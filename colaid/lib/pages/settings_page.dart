@@ -192,9 +192,15 @@ class SettingsPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 OutlinedButton.icon(
-                  onPressed: () => _showChangePasswordDialog(context),
+                  onPressed: UserService().userEmail == 'Guest'
+                      ? null
+                      : () => _showChangePasswordDialog(context),
                   icon: const Icon(Icons.lock_reset),
-                  label: const Text("Change Password"),
+                  label: Text(
+                    UserService().userEmail == 'Guest'
+                        ? "Change Password (Not available for guests)"
+                        : "Change Password",
+                  ),
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size(double.infinity, 48),
                   ),
@@ -394,9 +400,77 @@ class SettingsPage extends StatelessWidget {
   }
 
   void _showChangePasswordDialog(BuildContext context) {
+    final formKey = GlobalKey<FormState>();
     final passwordController = TextEditingController();
     final confirmController = TextEditingController();
     bool loading = false;
+
+    /// Validates password strength and returns error message if invalid
+    String? validatePassword(String? value) {
+      if (value == null || value.isEmpty) {
+        return 'Password is required';
+      }
+
+      final List<String> errors = [];
+
+      // Check minimum length
+      if (value.length < 8) {
+        errors.add('• At least 8 characters');
+      }
+
+      // Check for uppercase letter
+      if (!RegExp(r'[A-Z]').hasMatch(value)) {
+        errors.add('• At least one uppercase letter (A-Z)');
+      }
+
+      // Check for lowercase letter
+      if (!RegExp(r'[a-z]').hasMatch(value)) {
+        errors.add('• At least one lowercase letter (a-z)');
+      }
+
+      // Check for digit
+      if (!RegExp(r'[0-9]').hasMatch(value)) {
+        errors.add('• At least one number (0-9)');
+      }
+
+      // Check for special character
+      if (!RegExp(r'[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/~`]').hasMatch(value)) {
+        errors.add('• At least one special character (!@#\$%^&*...)');
+      }
+
+      // Check for common weak passwords
+      final commonWeakPasswords = [
+        '12345678',
+        '123456789',
+        '1234567890',
+        'password',
+        'password1',
+        'qwerty12',
+        'qwertyui',
+        'abcdefgh',
+        'abc12345',
+        '11111111',
+        '00000000',
+        'aaaaaaaa',
+        'password123',
+        'admin123',
+        'letmein1',
+      ];
+      if (commonWeakPasswords.contains(value.toLowerCase())) {
+        errors.add('• Password is too common, choose a stronger one');
+      }
+
+      // Check for repeating characters
+      if (RegExp(r'^(.)\1+$').hasMatch(value)) {
+        errors.add('• Password cannot be all the same character');
+      }
+
+      if (errors.isNotEmpty) {
+        return 'Password must contain:\n${errors.join('\n')}';
+      }
+
+      return null;
+    }
 
     showDialog(
       context: context,
@@ -405,25 +479,39 @@ class SettingsPage extends StatelessWidget {
           builder: (context, setState) {
             return AlertDialog(
               title: const Text("Change Password"),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: passwordController,
-                    obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: "New Password",
+              content: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextFormField(
+                      controller: passwordController,
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                        labelText: "New Password",
+                        helperText:
+                            'Must include uppercase, lowercase, number & special character',
+                        helperMaxLines: 2,
+                        errorMaxLines: 6,
+                      ),
+                      validator: validatePassword,
                     ),
-                  ),
-                  const SizedBox(height: 10),
-                  TextField(
-                    controller: confirmController,
-                    obscureText: true,
-                    decoration: const InputDecoration(
-                      labelText: "Confirm Password",
+                    const SizedBox(height: 10),
+                    TextFormField(
+                      controller: confirmController,
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                        labelText: "Confirm Password",
+                      ),
+                      validator: (value) {
+                        if (value != passwordController.text) {
+                          return 'Passwords do not match';
+                        }
+                        return null;
+                      },
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               actions: [
                 TextButton(
@@ -434,26 +522,11 @@ class SettingsPage extends StatelessWidget {
                   onPressed: loading
                       ? null
                       : () async {
+                          if (!(formKey.currentState?.validate() ?? false)) {
+                            return;
+                          }
+
                           final newPass = passwordController.text;
-                          final confirmPass = confirmController.text;
-
-                          if (newPass.length < 6) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Password too short"),
-                              ),
-                            );
-                            return;
-                          }
-
-                          if (newPass != confirmPass) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Passwords do not match"),
-                              ),
-                            );
-                            return;
-                          }
 
                           setState(() => loading = true);
 
