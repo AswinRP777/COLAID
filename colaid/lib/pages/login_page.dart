@@ -36,20 +36,12 @@ class _LoginPageState extends State<LoginPage>
       duration: const Duration(milliseconds: 800),
     );
 
-    _fadeAnim = CurvedAnimation(
-      parent: _pageController,
-      curve: Curves.easeOut,
-    );
+    _fadeAnim = CurvedAnimation(parent: _pageController, curve: Curves.easeOut);
 
-    _slideAnim = Tween<Offset>(
-      begin: const Offset(0, 0.12),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: _pageController,
-        curve: Curves.easeOutCubic,
-      ),
-    );
+    _slideAnim = Tween<Offset>(begin: const Offset(0, 0.12), end: Offset.zero)
+        .animate(
+          CurvedAnimation(parent: _pageController, curve: Curves.easeOutCubic),
+        );
 
     _pageController.forward();
   }
@@ -78,16 +70,19 @@ class _LoginPageState extends State<LoginPage>
 
       if (response.statusCode == 200) {
         await UserService().setUserData(email: _email);
+        if (!mounted) return;
         await Provider.of<ThemeProvider>(context, listen: false).refresh();
 
         final rawCookie = response.headers['set-cookie'];
         if (rawCookie != null) {
           final index = rawCookie.indexOf(';');
-          final cookie =
-              (index == -1) ? rawCookie : rawCookie.substring(0, index);
+          final cookie = (index == -1)
+              ? rawCookie
+              : rawCookie.substring(0, index);
           await UserService().setAuthCookie(cookie);
         }
 
+        if (!mounted) return;
         Navigator.pushReplacementNamed(context, '/home');
       } else {
         final msg = jsonDecode(response.body)['error'] ?? 'Login failed';
@@ -112,16 +107,19 @@ class _LoginPageState extends State<LoginPage>
 
       if (response.statusCode == 200) {
         await UserService().setUserData(email: 'Guest');
+        if (!mounted) return;
         await Provider.of<ThemeProvider>(context, listen: false).refresh();
 
         final rawCookie = response.headers['set-cookie'];
         if (rawCookie != null) {
           final index = rawCookie.indexOf(';');
-          final cookie =
-              (index == -1) ? rawCookie : rawCookie.substring(0, index);
+          final cookie = (index == -1)
+              ? rawCookie
+              : rawCookie.substring(0, index);
           await UserService().setAuthCookie(cookie);
         }
 
+        if (!mounted) return;
         Navigator.pushReplacementNamed(context, '/home');
       } else {
         _showSnack('Guest login failed');
@@ -133,8 +131,7 @@ class _LoginPageState extends State<LoginPage>
 
   void _showSnack(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(msg)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   @override
@@ -145,28 +142,25 @@ class _LoginPageState extends State<LoginPage>
         ? const LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF0F172A),
-              Color(0xFF020617),
-            ],
+            colors: [Color(0xFF0F172A), Color(0xFF020617)],
           )
         : const LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFF8FAFC),
-              Color(0xFFEFF6FF),
-            ],
+            colors: [Color(0xFFF8FAFC), Color(0xFFEFF6FF)],
           );
 
-    final titleColor =
-        isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
+    final titleColor = isDark
+        ? const Color(0xFFF8FAFC)
+        : const Color(0xFF0F172A);
 
-    final labelColor =
-        isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569);
+    final labelColor = isDark
+        ? const Color(0xFFCBD5E1)
+        : const Color(0xFF475569);
 
-    final textColor =
-        isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
+    final textColor = isDark
+        ? const Color(0xFFF8FAFC)
+        : const Color(0xFF0F172A);
 
     return Scaffold(
       body: Stack(
@@ -186,20 +180,20 @@ class _LoginPageState extends State<LoginPage>
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(24),
                         child: BackdropFilter(
-                          filter:
-                              ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                           child: Container(
                             padding: const EdgeInsets.all(24),
                             decoration: BoxDecoration(
                               color: isDark
-                                  ? const Color(0xFF020617)
-                                      .withOpacity(0.85)
-                                  : Colors.white.withOpacity(0.9),
+                                  ? const Color(
+                                      0xFF020617,
+                                    ).withValues(alpha: 0.85)
+                                  : Colors.white.withValues(alpha: 0.9),
                               borderRadius: BorderRadius.circular(24),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(
-                                    isDark ? 0.6 : 0.12,
+                                  color: Colors.black.withValues(
+                                    alpha: isDark ? 0.6 : 0.12,
                                   ),
                                   blurRadius: 28,
                                   offset: const Offset(0, 16),
@@ -245,15 +239,13 @@ class _LoginPageState extends State<LoginPage>
                                     style: TextStyle(color: textColor),
                                     decoration: InputDecoration(
                                       labelText: 'Email',
-                                      labelStyle:
-                                          TextStyle(color: labelColor),
+                                      labelStyle: TextStyle(color: labelColor),
                                     ),
-                                    keyboardType:
-                                        TextInputType.emailAddress,
+                                    keyboardType: TextInputType.emailAddress,
                                     validator: (v) =>
                                         (v == null || !v.contains('@'))
-                                            ? 'Enter a valid email'
-                                            : null,
+                                        ? 'Enter a valid email'
+                                        : null,
                                     onSaved: (v) => _email = v ?? '',
                                   ),
 
@@ -263,15 +255,13 @@ class _LoginPageState extends State<LoginPage>
                                     style: TextStyle(color: textColor),
                                     decoration: InputDecoration(
                                       labelText: 'Password',
-                                      labelStyle:
-                                          TextStyle(color: labelColor),
+                                      labelStyle: TextStyle(color: labelColor),
                                       suffixIcon: IconButton(
                                         icon: Icon(
                                           _obscure
                                               ? Icons.visibility_off
                                               : Icons.visibility,
-                                          color:
-                                              const Color(0xFF1E293B),
+                                          color: const Color(0xFF1E293B),
                                         ),
                                         onPressed: () => setState(
                                           () => _obscure = !_obscure,
@@ -281,8 +271,8 @@ class _LoginPageState extends State<LoginPage>
                                     obscureText: _obscure,
                                     validator: (v) =>
                                         (v == null || v.length < 6)
-                                            ? 'Minimum 6 characters'
-                                            : null,
+                                        ? 'Minimum 6 characters'
+                                        : null,
                                     onSaved: (v) => _password = v ?? '',
                                   ),
 
@@ -293,33 +283,27 @@ class _LoginPageState extends State<LoginPage>
                                     width: double.infinity,
                                     child: _loading
                                         ? const Center(
-                                            child:
-                                                CircularProgressIndicator(),
+                                            child: CircularProgressIndicator(),
                                           )
                                         : FilledButton(
-                                            style:
-                                                FilledButton.styleFrom(
+                                            style: FilledButton.styleFrom(
                                               backgroundColor: isDark
                                                   ? Colors.white
-                                                  : const Color(
-                                                      0xFF1E293B,
-                                                    ),
+                                                  : const Color(0xFF1E293B),
                                               foregroundColor: isDark
                                                   ? Colors.black
                                                   : Colors.white,
                                             ),
                                             onPressed: _submit,
                                             child: const Padding(
-                                              padding:
-                                                  EdgeInsets.symmetric(
+                                              padding: EdgeInsets.symmetric(
                                                 vertical: 14,
                                               ),
                                               child: Text(
                                                 'Sign in',
                                                 style: TextStyle(
                                                   fontSize: 16,
-                                                  fontWeight:
-                                                      FontWeight.w600,
+                                                  fontWeight: FontWeight.w600,
                                                 ),
                                               ),
                                             ),
@@ -330,14 +314,11 @@ class _LoginPageState extends State<LoginPage>
 
                                   // Register link
                                   Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.center,
+                                    mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Text(
                                         "Don't have an account?",
-                                        style: TextStyle(
-                                          color: labelColor,
-                                        ),
+                                        style: TextStyle(color: labelColor),
                                       ),
                                       TextButton(
                                         onPressed: () {
@@ -359,9 +340,7 @@ class _LoginPageState extends State<LoginPage>
 
                                   // Guest
                                   TextButton(
-                                    onPressed: _loading
-                                        ? null
-                                        : _guestLogin,
+                                    onPressed: _loading ? null : _guestLogin,
                                     child: const Text(
                                       'Continue as Guest',
                                       style: TextStyle(

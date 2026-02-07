@@ -35,17 +35,12 @@ class _WelcomePageState extends State<WelcomePage>
       CurvedAnimation(parent: _logoController, curve: Curves.easeInOut),
     );
 
-    _fadeAnim = CurvedAnimation(
-      parent: _pageController,
-      curve: Curves.easeOut,
-    );
+    _fadeAnim = CurvedAnimation(parent: _pageController, curve: Curves.easeOut);
 
-    _slideAnim = Tween<Offset>(
-      begin: const Offset(0, 0.15),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _pageController, curve: Curves.easeOutCubic),
-    );
+    _slideAnim = Tween<Offset>(begin: const Offset(0, 0.15), end: Offset.zero)
+        .animate(
+          CurvedAnimation(parent: _pageController, curve: Curves.easeOutCubic),
+        );
   }
 
   @override
@@ -64,32 +59,26 @@ class _WelcomePageState extends State<WelcomePage>
         ? const LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF0F172A),
-              Color(0xFF020617),
-            ],
+            colors: [Color(0xFF0F172A), Color(0xFF020617)],
           )
         : const LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFF8FAFC),
-              Color(0xFFEFF6FF),
-            ],
+            colors: [Color(0xFFF8FAFC), Color(0xFFEFF6FF)],
           );
 
-    final titleColor =
-        isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
+    final titleColor = isDark
+        ? const Color(0xFFF8FAFC)
+        : const Color(0xFF0F172A);
 
-    final subtitleColor =
-        isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569);
+    final subtitleColor = isDark
+        ? const Color(0xFFCBD5E1)
+        : const Color(0xFF475569);
 
     return Scaffold(
       body: Stack(
         children: [
-          Container(
-            decoration: BoxDecoration(gradient: bgGradient),
-          ),
+          Container(decoration: BoxDecoration(gradient: bgGradient)),
 
           SafeArea(
             child: Center(
@@ -122,8 +111,8 @@ class _WelcomePageState extends State<WelcomePage>
                                 color: Colors.white, // ✅ fixed
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(
-                                      isDark ? 0.5 : 0.12,
+                                    color: Colors.black.withValues(
+                                      alpha: isDark ? 0.5 : 0.12,
                                     ),
                                     blurRadius: 24,
                                     offset: const Offset(0, 14),
@@ -166,43 +155,42 @@ class _WelcomePageState extends State<WelcomePage>
 
                         // Get Started Button
                         SizedBox(
-  width: double.infinity,
-  child: GestureDetector(
-    onTap: () {
-      Navigator.pushReplacementNamed(context, '/login');
-    },
-    child: Container(
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        color: isDark
-            ? Colors.white
-            : const Color(0xFF1E293B), // dark navy
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(
-              isDark ? 0.5 : 0.2,
-            ),
-            blurRadius: 14,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Center(
-        child: Text(
-          'Get Started',
-          style: TextStyle(
-            fontSize: 16.5,
-            fontWeight: FontWeight.w700,
-            color: isDark ? Colors.black : Colors.white,
-            letterSpacing: 0.4,
-          ),
-        ),
-      ),
-    ),
-  ),
-),
-
+                          width: double.infinity,
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.pushReplacementNamed(context, '/login');
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(16),
+                                color: isDark
+                                    ? Colors.white
+                                    : const Color(0xFF1E293B), // dark navy
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(
+                                      alpha: isDark ? 0.5 : 0.2,
+                                    ),
+                                    blurRadius: 14,
+                                    offset: const Offset(0, 8),
+                                  ),
+                                ],
+                              ),
+                              child: Center(
+                                child: Text(
+                                  'Get Started',
+                                  style: TextStyle(
+                                    fontSize: 16.5,
+                                    fontWeight: FontWeight.w700,
+                                    color: isDark ? Colors.black : Colors.white,
+                                    letterSpacing: 0.4,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
