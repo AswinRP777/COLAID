@@ -9,37 +9,59 @@ import '../providers/theme_provider.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
+
   @override
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends State<LoginPage>
+    with SingleTickerProviderStateMixin {
   final _form = GlobalKey<FormState>();
   final _emailController = TextEditingController();
+
   String _email = '', _password = '';
   bool _obscure = true;
   bool _loading = false;
-  List<String> _emailSuggestions = [];
-  bool _showSuggestions = false; // Track if suggestions dropdown is open
+
+  late final AnimationController _pageController;
+  late final Animation<double> _fadeAnim;
+  late final Animation<Offset> _slideAnim;
 
   @override
   void initState() {
     super.initState();
-    _loadEmailHistory();
+
+    _pageController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+
+    _fadeAnim = CurvedAnimation(
+      parent: _pageController,
+      curve: Curves.easeOut,
+    );
+
+    _slideAnim = Tween<Offset>(
+      begin: const Offset(0, 0.12),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _pageController,
+        curve: Curves.easeOutCubic,
+      ),
+    );
+
+    _pageController.forward();
   }
 
   @override
   void dispose() {
     _emailController.dispose();
+    _pageController.dispose();
     super.dispose();
   }
 
-  void _loadEmailHistory() {
-    _emailSuggestions = UserService().emailHistory;
-    setState(() {});
-  }
-
-  void _submit() async {
+  Future<void> _submit() async {
     if (!(_form.currentState?.validate() ?? false)) return;
     _form.currentState?.save();
     setState(() => _loading = true);
@@ -55,49 +77,28 @@ class _LoginPageState extends State<LoginPage> {
       setState(() => _loading = false);
 
       if (response.statusCode == 200) {
-        // Save user info
         await UserService().setUserData(email: _email);
+        await Provider.of<ThemeProvider>(context, listen: false).refresh();
 
-        // Reset/Reload Settings for this user
-        if (mounted) {
-          await Provider.of<ThemeProvider>(context, listen: false).refresh();
-        }
-
-        // Save Session Cookie
-        String? rawCookie = response.headers['set-cookie'];
+        final rawCookie = response.headers['set-cookie'];
         if (rawCookie != null) {
-          int index = rawCookie.indexOf(';');
-          String cookie = (index == -1)
-              ? rawCookie
-              : rawCookie.substring(0, index);
+          final index = rawCookie.indexOf(';');
+          final cookie =
+              (index == -1) ? rawCookie : rawCookie.substring(0, index);
           await UserService().setAuthCookie(cookie);
         }
 
-        if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Signed in as $_email')));
-
-        // Navigate to HomePage
         Navigator.pushReplacementNamed(context, '/home');
       } else {
         final msg = jsonDecode(response.body)['error'] ?? 'Login failed';
-        if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error: $msg')));
+        _showSnack(msg);
       }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _loading = false);
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Connection error: $e')));
+    } catch (_) {
+      _showSnack('Connection error');
     }
   }
 
-  void _guestLogin() async {
+  Future<void> _guestLogin() async {
     setState(() => _loading = true);
 
     try {
@@ -110,407 +111,278 @@ class _LoginPageState extends State<LoginPage> {
       setState(() => _loading = false);
 
       if (response.statusCode == 200) {
-        // Save user info - specific for Guest
         await UserService().setUserData(email: 'Guest');
+        await Provider.of<ThemeProvider>(context, listen: false).refresh();
 
-        // Reset/Reload Settings for this user
-        if (mounted) {
-          await Provider.of<ThemeProvider>(context, listen: false).refresh();
-        }
-
-        // Save Session Cookie
-        String? rawCookie = response.headers['set-cookie'];
+        final rawCookie = response.headers['set-cookie'];
         if (rawCookie != null) {
-          int index = rawCookie.indexOf(';');
-          String cookie = (index == -1)
-              ? rawCookie
-              : rawCookie.substring(0, index);
+          final index = rawCookie.indexOf(';');
+          final cookie =
+              (index == -1) ? rawCookie : rawCookie.substring(0, index);
           await UserService().setAuthCookie(cookie);
         }
 
-        if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Signed in as Guest')));
-
-        // Navigate to HomePage
         Navigator.pushReplacementNamed(context, '/home');
       } else {
-        if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Guest login failed')));
+        _showSnack('Guest login failed');
       }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _loading = false);
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Connection error: $e')));
+    } catch (_) {
+      _showSnack('Connection error');
     }
+  }
+
+  void _showSnack(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(msg)));
   }
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final bgGradient = isDark
+        ? const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF0F172A),
+              Color(0xFF020617),
+            ],
+          )
+        : const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFF8FAFC),
+              Color(0xFFEFF6FF),
+            ],
+          );
+
+    final titleColor =
+        isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
+
+    final labelColor =
+        isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569);
+
+    final textColor =
+        isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
+
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: cs.surfaceContainerHighest,
-        title: const Text('Sign in'),
-      ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 30),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Hero(
-                  tag: 'app-logo',
-                  child: Icon(
-                    Icons.volunteer_activism,
-                    size: 72,
-                    color: cs.primary,
-                  ),
-                ),
-                const SizedBox(height: 18),
-                AutofillGroup(
-                  child: Form(
-                    key: _form,
-                    child: Column(
-                      children: [
-                        // Email field with autocomplete suggestions
-                        Autocomplete<String>(
-                          optionsBuilder: (TextEditingValue textEditingValue) {
-                            // Return empty list if suggestions are collapsed
-                            if (!_showSuggestions) {
-                              return const Iterable<String>.empty();
-                            }
-                            if (textEditingValue.text.isEmpty) {
-                              // Show all suggestions when field is empty/focused
-                              return _emailSuggestions;
-                            }
-                            // Filter suggestions based on input
-                            return _emailSuggestions.where(
-                              (email) => email.toLowerCase().contains(
-                                textEditingValue.text.toLowerCase(),
-                              ),
-                            );
-                          },
-                          onSelected: (String selection) {
-                            _emailController.text = selection;
-                            setState(() => _showSuggestions = false);
-                          },
-                          fieldViewBuilder:
-                              (
-                                context,
-                                controller,
-                                focusNode,
-                                onFieldSubmitted,
-                              ) {
-                                // Sync controllers
-                                if (_emailController.text.isEmpty &&
-                                    controller.text.isEmpty) {
-                                  controller.text = _emailController.text;
-                                }
-                                return TextFormField(
-                                  controller: controller,
-                                  focusNode: focusNode,
-                                  decoration: InputDecoration(
-                                    labelText: 'Email',
-                                    suffixIcon: _emailSuggestions.isNotEmpty
-                                        ? IconButton(
-                                            icon: Icon(
-                                              _showSuggestions
-                                                  ? Icons.arrow_drop_up
-                                                  : Icons.arrow_drop_down,
-                                            ),
-                                            onPressed: () {
-                                              setState(() {
-                                                _showSuggestions =
-                                                    !_showSuggestions;
-                                              });
-                                              if (_showSuggestions) {
-                                                // Focus to trigger rebuild and show suggestions
-                                                focusNode.requestFocus();
-                                              } else {
-                                                // Unfocus to close suggestions
-                                                focusNode.unfocus();
-                                              }
-                                            },
-                                          )
-                                        : null,
+      body: Stack(
+        children: [
+          Container(decoration: BoxDecoration(gradient: bgGradient)),
+
+          SafeArea(
+            child: Center(
+              child: FadeTransition(
+                opacity: _fadeAnim,
+                child: SlideTransition(
+                  position: _slideAnim,
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 420),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
+                        child: BackdropFilter(
+                          filter:
+                              ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                          child: Container(
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? const Color(0xFF020617)
+                                      .withOpacity(0.85)
+                                  : Colors.white.withOpacity(0.9),
+                              borderRadius: BorderRadius.circular(24),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(
+                                    isDark ? 0.6 : 0.12,
                                   ),
-                                  keyboardType: TextInputType.emailAddress,
-                                  autofillHints: const [
-                                    AutofillHints.email,
-                                    AutofillHints.username,
-                                  ],
-                                  onTap: () {
-                                    // Show suggestions when field is tapped
-                                    if (!_showSuggestions &&
-                                        _emailSuggestions.isNotEmpty) {
-                                      setState(() => _showSuggestions = true);
-                                    }
-                                  },
-                                  validator: (v) =>
-                                      (v == null || !v.contains('@'))
-                                      ? 'Enter a valid email'
-                                      : null,
-                                  onSaved: (v) => _email = v?.trim() ?? '',
-                                );
-                              },
-                          optionsViewBuilder: (context, onSelected, options) {
-                            return Align(
-                              alignment: Alignment.topLeft,
-                              child: Padding(
-                                padding: const EdgeInsets.only(top: 4),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(16),
-                                  child: BackdropFilter(
-                                    filter: ImageFilter.blur(
-                                      sigmaX: 10,
-                                      sigmaY: 10,
-                                    ),
+                                  blurRadius: 28,
+                                  offset: const Offset(0, 16),
+                                ),
+                              ],
+                            ),
+                            child: Form(
+                              key: _form,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  // Logo
+                                  Hero(
+                                    tag: 'colaid-logo',
                                     child: Container(
-                                      constraints: const BoxConstraints(
-                                        maxHeight: 220,
-                                        maxWidth: 476,
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: const BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        color: Colors.white,
                                       ),
-                                      decoration: BoxDecoration(
-                                        color: cs.surface.withValues(
-                                          alpha: 0.85,
+                                      child: Image.asset(
+                                        'assets/colaid_eye.png',
+                                        width: 64,
+                                      ),
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 16),
+
+                                  Text(
+                                    'Sign in to ColAid',
+                                    style: TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w800,
+                                      color: titleColor,
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 24),
+
+                                  TextFormField(
+                                    controller: _emailController,
+                                    style: TextStyle(color: textColor),
+                                    decoration: InputDecoration(
+                                      labelText: 'Email',
+                                      labelStyle:
+                                          TextStyle(color: labelColor),
+                                    ),
+                                    keyboardType:
+                                        TextInputType.emailAddress,
+                                    validator: (v) =>
+                                        (v == null || !v.contains('@'))
+                                            ? 'Enter a valid email'
+                                            : null,
+                                    onSaved: (v) => _email = v ?? '',
+                                  ),
+
+                                  const SizedBox(height: 12),
+
+                                  TextFormField(
+                                    style: TextStyle(color: textColor),
+                                    decoration: InputDecoration(
+                                      labelText: 'Password',
+                                      labelStyle:
+                                          TextStyle(color: labelColor),
+                                      suffixIcon: IconButton(
+                                        icon: Icon(
+                                          _obscure
+                                              ? Icons.visibility_off
+                                              : Icons.visibility,
+                                          color:
+                                              const Color(0xFF1E293B),
                                         ),
-                                        borderRadius: BorderRadius.circular(16),
-                                        border: Border.all(
-                                          color: cs.outline.withValues(
-                                            alpha: 0.2,
-                                          ),
-                                          width: 1,
+                                        onPressed: () => setState(
+                                          () => _obscure = !_obscure,
                                         ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: cs.shadow.withValues(
-                                              alpha: 0.15,
+                                      ),
+                                    ),
+                                    obscureText: _obscure,
+                                    validator: (v) =>
+                                        (v == null || v.length < 6)
+                                            ? 'Minimum 6 characters'
+                                            : null,
+                                    onSaved: (v) => _password = v ?? '',
+                                  ),
+
+                                  const SizedBox(height: 24),
+
+                                  // Sign in
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: _loading
+                                        ? const Center(
+                                            child:
+                                                CircularProgressIndicator(),
+                                          )
+                                        : FilledButton(
+                                            style:
+                                                FilledButton.styleFrom(
+                                              backgroundColor: isDark
+                                                  ? Colors.white
+                                                  : const Color(
+                                                      0xFF1E293B,
+                                                    ),
+                                              foregroundColor: isDark
+                                                  ? Colors.black
+                                                  : Colors.white,
                                             ),
-                                            blurRadius: 20,
-                                            spreadRadius: 2,
-                                            offset: const Offset(0, 8),
-                                          ),
-                                        ],
-                                      ),
-                                      child: ListView.separated(
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 8,
-                                        ),
-                                        shrinkWrap: true,
-                                        itemCount: options.length,
-                                        separatorBuilder: (context, index) =>
-                                            Divider(
-                                              height: 1,
-                                              indent: 72,
-                                              endIndent: 16,
-                                              color: cs.outline.withValues(
-                                                alpha: 0.1,
+                                            onPressed: _submit,
+                                            child: const Padding(
+                                              padding:
+                                                  EdgeInsets.symmetric(
+                                                vertical: 14,
                                               ),
-                                            ),
-                                        itemBuilder: (context, index) {
-                                          final email = options.elementAt(
-                                            index,
-                                          );
-                                          return Material(
-                                            color: Colors.transparent,
-                                            child: InkWell(
-                                              onTap: () => onSelected(email),
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              child: Padding(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 12,
-                                                      vertical: 8,
-                                                    ),
-                                                child: Row(
-                                                  children: [
-                                                    Container(
-                                                      width: 44,
-                                                      height: 44,
-                                                      decoration: BoxDecoration(
-                                                        gradient:
-                                                            LinearGradient(
-                                                              colors: [
-                                                                cs.primary
-                                                                    .withValues(
-                                                                      alpha:
-                                                                          0.8,
-                                                                    ),
-                                                                cs.tertiary
-                                                                    .withValues(
-                                                                      alpha:
-                                                                          0.8,
-                                                                    ),
-                                                              ],
-                                                              begin: Alignment
-                                                                  .topLeft,
-                                                              end: Alignment
-                                                                  .bottomRight,
-                                                            ),
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                              12,
-                                                            ),
-                                                      ),
-                                                      child: Center(
-                                                        child: Text(
-                                                          email[0]
-                                                              .toUpperCase(),
-                                                          style: TextStyle(
-                                                            color: cs.onPrimary,
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                            fontSize: 18,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    const SizedBox(width: 14),
-                                                    Expanded(
-                                                      child: Column(
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .start,
-                                                        children: [
-                                                          Text(
-                                                            email,
-                                                            style: TextStyle(
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w600,
-                                                              fontSize: 15,
-                                                              color:
-                                                                  cs.onSurface,
-                                                            ),
-                                                          ),
-                                                          const SizedBox(
-                                                            height: 2,
-                                                          ),
-                                                          Text(
-                                                            'Previously signed in',
-                                                            style: TextStyle(
-                                                              fontSize: 12,
-                                                              color: cs
-                                                                  .onSurface
-                                                                  .withValues(
-                                                                    alpha: 0.6,
-                                                                  ),
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                    IconButton(
-                                                      icon: Icon(
-                                                        Icons.close_rounded,
-                                                        size: 18,
-                                                        color: cs.outline
-                                                            .withValues(
-                                                              alpha: 0.6,
-                                                            ),
-                                                      ),
-                                                      onPressed: () async {
-                                                        await UserService()
-                                                            .removeEmailFromHistory(
-                                                              email,
-                                                            );
-                                                        _loadEmailHistory();
-                                                      },
-                                                      tooltip:
-                                                          'Remove from suggestions',
-                                                      splashRadius: 20,
-                                                    ),
-                                                  ],
+                                              child: Text(
+                                                'Sign in',
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight:
+                                                      FontWeight.w600,
                                                 ),
                                               ),
                                             ),
+                                          ),
+                                  ),
+
+                                  const SizedBox(height: 14),
+
+                                  // Register link
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        "Don't have an account?",
+                                        style: TextStyle(
+                                          color: labelColor,
+                                        ),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.pushReplacementNamed(
+                                            context,
+                                            '/register',
                                           );
                                         },
+                                        child: const Text(
+                                          'Register',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            color: Color(0xFFF97316),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+
+                                  // Guest
+                                  TextButton(
+                                    onPressed: _loading
+                                        ? null
+                                        : _guestLogin,
+                                    child: const Text(
+                                      'Continue as Guest',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        color: Color(0xFFF97316),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        TextFormField(
-                          decoration: InputDecoration(
-                            labelText: 'Password',
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscure
-                                    ? Icons.visibility_off
-                                    : Icons.visibility,
-                              ),
-                              onPressed: () =>
-                                  setState(() => _obscure = !_obscure),
-                            ),
-                          ),
-                          obscureText: _obscure,
-                          autofillHints: const [AutofillHints.password],
-                          validator: (v) => (v == null || v.length < 6)
-                              ? 'Minimum 6 characters'
-                              : null,
-                          onSaved: (v) => _password = v ?? '',
-                        ),
-                        const SizedBox(height: 18),
-                        SizedBox(
-                          width: double.infinity,
-                          child: _loading
-                              ? const Center(child: CircularProgressIndicator())
-                              : FilledButton(
-                                  onPressed: _submit,
-                                  child: const Padding(
-                                    padding: EdgeInsets.symmetric(vertical: 12),
-                                    child: Text(
-                                      'Sign in',
-                                      style: TextStyle(fontSize: 16),
-                                    ),
-                                  ),
-                                ),
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            TextButton(
-                              onPressed: () => Navigator.pushReplacementNamed(
-                                context,
-                                '/register',
-                              ),
-                              child: const Text(
-                                "Don't have an account? Register",
+                                ],
                               ),
                             ),
-                          ],
-                        ),
-                        TextButton(
-                          onPressed: _loading ? null : _guestLogin,
-                          child: const Text(
-                            "Continue as Guest",
-                            style: TextStyle(fontWeight: FontWeight.bold),
                           ),
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
-              ],
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }

@@ -1,236 +1,217 @@
 // lib/pages/welcome_page.dart
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:provider/provider.dart';
-import '../services/user_service.dart';
-import '../providers/theme_provider.dart';
 
 class WelcomePage extends StatefulWidget {
   const WelcomePage({super.key});
+
   @override
   State<WelcomePage> createState() => _WelcomePageState();
 }
 
 class _WelcomePageState extends State<WelcomePage>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _anim;
-  late final Animation<double> _pulse;
-  bool _loading = false;
+    with TickerProviderStateMixin {
+  late final AnimationController _logoController;
+  late final AnimationController _pageController;
+
+  late final Animation<double> _floatAnim;
+  late final Animation<double> _fadeAnim;
+  late final Animation<Offset> _slideAnim;
 
   @override
   void initState() {
     super.initState();
-    _anim = AnimationController(
+
+    _logoController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 3),
+      duration: const Duration(seconds: 5),
     )..repeat(reverse: true);
-    _pulse = Tween<double>(
-      begin: 0.98,
-      end: 1.02,
-    ).animate(CurvedAnimation(parent: _anim, curve: Curves.easeInOut));
+
+    _pageController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    )..forward();
+
+    _floatAnim = Tween(begin: -6.0, end: 6.0).animate(
+      CurvedAnimation(parent: _logoController, curve: Curves.easeInOut),
+    );
+
+    _fadeAnim = CurvedAnimation(
+      parent: _pageController,
+      curve: Curves.easeOut,
+    );
+
+    _slideAnim = Tween<Offset>(
+      begin: const Offset(0, 0.15),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _pageController, curve: Curves.easeOutCubic),
+    );
   }
 
   @override
   void dispose() {
-    _anim.dispose();
+    _logoController.dispose();
+    _pageController.dispose();
     super.dispose();
-  }
-
-  void _guestLogin() async {
-    setState(() => _loading = true);
-
-    try {
-      final response = await http.post(
-        Uri.parse('${dotenv.env['API_URL']}/guest-login'),
-        headers: {'Content-Type': 'application/json'},
-      );
-
-      if (!mounted) return;
-      setState(() => _loading = false);
-
-      if (response.statusCode == 200) {
-        // Save user info - specific for Guest
-        await UserService().setUserData(email: 'Guest');
-
-        // Reset/Reload Settings for this (Guest) user
-        if (mounted) {
-          await Provider.of<ThemeProvider>(context, listen: false).refresh();
-        }
-
-        // Save Session Cookie
-        String? rawCookie = response.headers['set-cookie'];
-        if (rawCookie != null) {
-          int index = rawCookie.indexOf(';');
-          String cookie = (index == -1)
-              ? rawCookie
-              : rawCookie.substring(0, index);
-          await UserService().setAuthCookie(cookie);
-        }
-
-        if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Signed in as Guest')));
-
-        // Navigate to HomePage
-        Navigator.pushReplacementNamed(context, '/home');
-      } else {
-        if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Guest login failed')));
-      }
-    } catch (e) {
-      if (!mounted) return;
-      setState(() => _loading = false);
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Connection error: $e')));
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final isWide = MediaQuery.of(context).size.width > 600;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Background
+    final bgGradient = isDark
+        ? const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFF0F172A),
+              Color(0xFF020617),
+            ],
+          )
+        : const LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              Color(0xFFF8FAFC),
+              Color(0xFFEFF6FF),
+            ],
+          );
+
+    final titleColor =
+        isDark ? const Color(0xFFF8FAFC) : const Color(0xFF0F172A);
+
+    final subtitleColor =
+        isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569);
 
     return Scaffold(
       body: Stack(
         children: [
-          // Animated radial gradient background
-          AnimatedContainer(
-            duration: const Duration(seconds: 6),
-            decoration: BoxDecoration(
-              gradient: RadialGradient(
-                colors: [
-                  cs.primary.withAlpha(40),
-                  cs.secondary.withAlpha(30),
-                  cs.surface,
-                ],
-                radius: 1.0,
-                focal: Alignment.topLeft,
-                stops: const [0.0, 0.6, 1.0],
-              ),
-            ),
+          Container(
+            decoration: BoxDecoration(gradient: bgGradient),
           ),
+
           SafeArea(
             child: Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24.0,
-                  vertical: 28.0,
-                ),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 900),
-                  child: isWide
-                      ? Row(
-                          children: [
-                            Expanded(child: _leftPanel(cs)),
-                            const SizedBox(width: 32),
-                            Expanded(child: _rightPanel(context)),
-                          ],
-                        )
-                      : Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            _leftPanel(cs),
-                            const SizedBox(height: 26),
-                            _rightPanel(context),
-                          ],
+              child: FadeTransition(
+                opacity: _fadeAnim,
+                child: SlideTransition(
+                  position: _slideAnim,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 28),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // 👁 Floating Logo (ALWAYS WHITE BACKGROUND)
+                        AnimatedBuilder(
+                          animation: _floatAnim,
+                          builder: (_, child) {
+                            return Transform.translate(
+                              offset: Offset(0, _floatAnim.value),
+                              child: child,
+                            );
+                          },
+                          child: Hero(
+                            tag: 'colaid-logo',
+                            child: Container(
+                              width: 150,
+                              height: 150,
+                              padding: const EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Colors.white, // ✅ fixed
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(
+                                      isDark ? 0.5 : 0.12,
+                                    ),
+                                    blurRadius: 24,
+                                    offset: const Offset(0, 14),
+                                  ),
+                                ],
+                              ),
+                              child: Image.asset(
+                                'assets/colaid_eye.png',
+                                fit: BoxFit.contain,
+                              ),
+                            ),
+                          ),
                         ),
+
+                        const SizedBox(height: 32),
+
+                        Text(
+                          'Welcome to ColAid',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w800,
+                            color: titleColor,
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        Text(
+                          'Real-time color assistance designed to improve\nclarity, confidence, and accessibility.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 15.5,
+                            height: 1.5,
+                            color: subtitleColor,
+                          ),
+                        ),
+
+                        const SizedBox(height: 40),
+
+                        // Get Started Button
+                        SizedBox(
+  width: double.infinity,
+  child: GestureDetector(
+    onTap: () {
+      Navigator.pushReplacementNamed(context, '/login');
+    },
+    child: Container(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        color: isDark
+            ? Colors.white
+            : const Color(0xFF1E293B), // dark navy
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(
+              isDark ? 0.5 : 0.2,
+            ),
+            blurRadius: 14,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Center(
+        child: Text(
+          'Get Started',
+          style: TextStyle(
+            fontSize: 16.5,
+            fontWeight: FontWeight.w700,
+            color: isDark ? Colors.black : Colors.white,
+            letterSpacing: 0.4,
+          ),
+        ),
+      ),
+    ),
+  ),
+),
+
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _leftPanel(ColorScheme cs) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        ScaleTransition(
-          scale: _pulse,
-          child: Hero(
-            tag: 'app-logo',
-            child: Container(
-              width: 140,
-              height: 140,
-              decoration: BoxDecoration(
-                color: cs.primary.withAlpha(40),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.volunteer_activism,
-                size: 72,
-                color: cs.primary,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 18),
-        Text(
-          'Welcome to COLAID',
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.w700,
-            color: cs.onSurface,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          'A collaborative platform for quick aid & community support. Sign in to access your dashboard or create a new account.',
-          style: TextStyle(
-            fontSize: 15,
-            color: cs.onSurface.withValues(alpha: 0.75),
-          ),
-          textAlign: TextAlign.center,
-        ),
-      ],
-    );
-  }
-
-  Widget _rightPanel(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SizedBox(
-          width: double.infinity,
-          child: FilledButton(
-            onPressed: () => Navigator.pushNamed(context, '/register'),
-            style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-            ),
-            child: const Text(
-              'Create an account',
-              style: TextStyle(fontSize: 16),
-            ),
-          ),
-        ),
-        const SizedBox(height: 12),
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton(
-            onPressed: () => Navigator.pushNamed(context, '/login'),
-            style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 14),
-            ),
-            child: const Text('Sign in', style: TextStyle(fontSize: 16)),
-          ),
-        ),
-        const SizedBox(height: 14),
-        const SizedBox(height: 14),
-        _loading
-            ? const CircularProgressIndicator()
-            : TextButton(
-                onPressed: _guestLogin,
-                child: const Text('Continue as guest'),
-              ),
-      ],
     );
   }
 }

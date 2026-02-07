@@ -138,59 +138,102 @@ class _HomePageState extends State<HomePage> {
     if (ColaidBluetoothService().connectedDevice != null) return;
 
     // Show Premium Dialog
-    if (!mounted) return;
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Row(
+   if (!mounted) return;
+
+final isDark = Theme.of(context).brightness == Brightness.dark;
+
+showDialog(
+  context: context,
+  barrierDismissible: true,
+  builder: (ctx) => AlertDialog(
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(20),
+    ),
+    backgroundColor: isDark
+        ? const Color(0xFF020617)
+        : Colors.white,
+    title: Row(
+      children: [
+        Icon(
+          Icons.visibility,
+          color: isDark
+              ? Colors.white
+              : Theme.of(context).colorScheme.primary,
+        ),
+        const SizedBox(width: 10),
+        Text(
+          "Connect Eyewear",
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : Colors.black,
+          ),
+        ),
+      ],
+    ),
+    content: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          "Experience the full potential of Colaid. Connect your smart eyewear for real-time color correction and assistance.",
+          style: TextStyle(
+            fontSize: 14,
+            color: isDark ? Colors.grey.shade300 : Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Row(
           children: [
-            Icon(
-              Icons.visibility,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            const SizedBox(width: 10),
-            const Text("Connect Eyewear"),
+            const Icon(Icons.bluetooth, size: 20, color: Colors.grey),
+            const SizedBox(width: 8),
+            const Text("Bluetooth", style: TextStyle(color: Colors.grey)),
+            const SizedBox(width: 16),
+            const Icon(Icons.location_on, size: 20, color: Colors.grey),
+            const SizedBox(width: 8),
+            const Text("Location", style: TextStyle(color: Colors.grey)),
           ],
         ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              "Experience the full potential of Colaid. Connect your smart eyewear for real-time color correction and assistance.",
-              style: TextStyle(fontSize: 14),
-            ),
-            const SizedBox(height: 16),
-            const Row(
-              children: [
-                Icon(Icons.bluetooth, size: 20, color: Colors.grey),
-                SizedBox(width: 8),
-                Text("Bluetooth", style: TextStyle(color: Colors.grey)),
-                SizedBox(width: 16),
-                Icon(Icons.location_on, size: 20, color: Colors.grey),
-                SizedBox(width: 8),
-                Text("Location", style: TextStyle(color: Colors.grey)),
-              ],
-            ),
-          ],
+      ],
+    ),
+    actions: [
+      // Later button
+      TextButton(
+        onPressed: () => Navigator.pop(ctx),
+        child: Text(
+          "Later",
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: isDark ? Colors.grey.shade300 : Colors.grey.shade700,
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text("Later"),
-          ),
-          FilledButton.icon(
-            onPressed: () {
-              Navigator.pop(ctx);
-              _handleConnectEyewear();
-            },
-            icon: const Icon(Icons.link),
-            label: const Text("Connect Now"),
-          ),
-        ],
       ),
-    );
+
+      // Connect Now button (LOGIN THEME)
+      FilledButton.icon(
+        onPressed: () {
+          Navigator.pop(ctx);
+          _handleConnectEyewear();
+        },
+        icon: Icon(
+          Icons.link,
+          color: isDark ? Colors.black : Colors.white,
+        ),
+        label: Text(
+          "Connect Now",
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: isDark ? Colors.black : Colors.white,
+          ),
+        ),
+        style: FilledButton.styleFrom(
+          backgroundColor:
+              isDark ? Colors.white : const Color(0xFF1E293B),
+          foregroundColor:
+              isDark ? Colors.black : Colors.white,
+        ),
+      ),
+    ],
+  ),
+);
   }
 
   Future<void> _handleConnectEyewear() async {
@@ -269,6 +312,13 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Vision Test Home'),
+  backgroundColor: Theme.of(context).brightness == Brightness.dark
+      ? const Color(0xFF020617)
+      : Colors.white,
+  foregroundColor: Theme.of(context).brightness == Brightness.dark
+      ? Colors.white
+      : const Color(0xFF1E293B),
+  elevation: 0,
         actions: [
           IconButton(
             tooltip: 'Notifications',
@@ -363,11 +413,15 @@ class _HomePageState extends State<HomePage> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [cs.primary, cs.tertiary],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  gradient: const LinearGradient(
+  colors: [
+    Color(0xFF0F172A),
+    Color(0xFF020617),
+  ],
+  begin: Alignment.topLeft,
+  end: Alignment.bottomRight,
+),
+
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -529,12 +583,21 @@ class _HomePageState extends State<HomePage> {
       ),
 
       floatingActionButton: _selectedIndex == 1
-          ? FloatingActionButton.extended(
-              onPressed: () => Navigator.pushNamed(context, '/ishihara'),
-              label: const Text("Start Test"),
-              icon: const Icon(Icons.color_lens),
-            )
-          : null,
+    ? FloatingActionButton.extended(
+        backgroundColor:
+            Theme.of(context).brightness == Brightness.dark
+                ? Colors.white
+                : const Color(0xFF1E293B),
+        foregroundColor:
+            Theme.of(context).brightness == Brightness.dark
+                ? Colors.black
+                : Colors.white,
+        onPressed: () => Navigator.pushNamed(context, '/ishihara'),
+        icon: const Icon(Icons.color_lens),
+        label: const Text("Start Test"),
+      )
+    : null,
+
     );
   }
 
@@ -578,15 +641,26 @@ class _HomePageState extends State<HomePage> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
+                color: Theme.of(context).brightness == Brightness.dark
+    ? const Color(0xFF020617)
+    : Colors.white,
                 child: ListTile(
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 8,
                   ),
                   leading: CircleAvatar(
-                    backgroundColor: cs.primary.withValues(alpha: 0.12),
-                    child: Icon(icons[index], color: cs.primary),
-                  ),
+  backgroundColor: Theme.of(context).brightness == Brightness.dark
+      ? Colors.white.withOpacity(0.08)
+      : cs.primary.withOpacity(0.12),
+  child: Icon(
+    icons[index],
+    color: Theme.of(context).brightness == Brightness.dark
+        ? Colors.white
+        : const Color(0xFF1E293B),
+  ),
+),
+
                   title: Text(c['title'] ?? ''),
                   subtitle: Text(c['subtitle'] ?? ''),
                   trailing: const Icon(Icons.arrow_forward_ios, size: 16),
@@ -614,12 +688,23 @@ class _HomePageState extends State<HomePage> {
           SizedBox(
             width: double.infinity,
             child: FilledButton(
-              onPressed: () => Navigator.pushNamed(context, '/ishihara'),
-              child: const Padding(
-                padding: EdgeInsets.symmetric(vertical: 14),
-                child: Text("Get Started"),
-              ),
-            ),
+  onPressed: () => Navigator.pushNamed(context, '/ishihara'),
+  style: FilledButton.styleFrom(
+    backgroundColor:
+        Theme.of(context).brightness == Brightness.dark
+            ? Colors.white
+            : const Color(0xFF1E293B),
+    foregroundColor:
+        Theme.of(context).brightness == Brightness.dark
+            ? Colors.black
+            : Colors.white,
+  ),
+  child: const Padding(
+    padding: EdgeInsets.symmetric(vertical: 14),
+    child: Text("Get Started"),
+  ),
+),
+
           ),
           const SizedBox(height: 20),
         ],
@@ -647,113 +732,255 @@ class _HomePageState extends State<HomePage> {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final cvdType = themeProvider.cvdType.name.toUpperCase();
     final userProfilePic = UserService().profilePicPath;
+    
 
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Stack(
-            children: [
-              // 1. Profile Picture - Tap to View
-              GestureDetector(
+   final isDark = Theme.of(context).brightness == Brightness.dark;
+final cs = Theme.of(context).colorScheme;
+
+return Center(
+  child: SingleChildScrollView(
+    padding: const EdgeInsets.symmetric(horizontal: 24),
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // ================= PROFILE IMAGE =================
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isDark ? Colors.white : cs.primary,
+                  width: 2,
+                ),
+              ),
+              child: GestureDetector(
                 onTap: () {
                   if (userProfilePic != null) {
                     _showFullScreenImage(userProfilePic);
                   }
                 },
                 child: CircleAvatar(
-                  radius: 46,
-                  backgroundColor: Colors.grey.shade200,
+                  radius: 52,
+                  backgroundColor:
+                      isDark ? const Color(0xFF020617) : Colors.grey.shade200,
                   backgroundImage: userProfilePic != null
                       ? FileImage(File(userProfilePic))
                       : null,
                   child: userProfilePic == null
-                      ? const Icon(Icons.person, size: 50, color: Colors.grey)
+                      ? Icon(
+                          Icons.person,
+                          size: 56,
+                          color: isDark
+                              ? Colors.grey.shade400
+                              : Colors.grey,
+                        )
                       : null,
                 ),
               ),
+            ),
 
-              // 2. Camera Icon - Tap to Pick
+            // Camera button
+            Positioned(
+              bottom: 0,
+              right: 0,
+              child: GestureDetector(
+                onTap: _pickImage,
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.white : cs.primary,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.camera_alt,
+                    size: 16,
+                    color: isDark ? Colors.black : Colors.white,
+                  ),
+                ),
+              ),
+            ),
+
+            // Delete button
+            if (userProfilePic != null)
               Positioned(
-                bottom: 0,
+                top: 0,
                 right: 0,
                 child: GestureDetector(
-                  onTap: _pickImage,
+                  onTap: () async {
+                    await UserService().removeProfilePic();
+                    if (mounted) setState(() {});
+                  },
                   child: Container(
-                    padding: const EdgeInsets.all(4),
+                    padding: const EdgeInsets.all(6),
                     decoration: const BoxDecoration(
-                      color: Colors.blue,
+                      color: Colors.red,
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
-                      Icons.camera_alt,
+                      Icons.delete,
+                      size: 14,
                       color: Colors.white,
-                      size: 16,
                     ),
                   ),
                 ),
               ),
+          ],
+        ),
 
-              // 3. Trash Icon - Tap to Delete (Only if pic exists)
-              if (userProfilePic != null)
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  child: GestureDetector(
-                    onTap: () async {
-                      await UserService().removeProfilePic();
-                      if (mounted) {
-                        setState(() {});
-                      }
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: const BoxDecoration(
-                        color: Colors.red,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.delete,
-                        color: Colors.white,
-                        size: 16,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
+        const SizedBox(height: 16),
+
+        // ================= USER INFO =================
+        Text(
+          UserService().userName ?? "Vision Test User",
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: isDark ? Colors.white : Colors.black,
           ),
-          const SizedBox(height: 12),
-          Text(
-            UserService().userName ?? "Vision Test User",
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+
+        const SizedBox(height: 4),
+
+        Text(
+          UserService().userEmail ?? "user@example.com",
+          style: TextStyle(
+            fontSize: 14,
+            color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
+          ),
+        ),
+
+        const SizedBox(height: 12),
+
+        // ================= CVD CHIP =================
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+          decoration: BoxDecoration(
+            color: cs.tertiaryContainer,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(
+            "CVD Type: $cvdType",
+            style: TextStyle(
+              color: cs.onTertiaryContainer,
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 28),
+
+        // ================= QUICK ACTIONS =================
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _ProfileQuickAction(
+              icon: Icons.assessment,
+              label: "Results",
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const ResultsHistoryPage(),
+                  ),
+                );
+              },
+            ),
+            _ProfileQuickAction(
+              icon: Icons.settings,
+              label: "Settings",
+              onTap: () {
+                Navigator.pushNamed(context, '/settings');
+              },
+            ),
+          ],
+        ),
+
+        const SizedBox(height: 28),
+
+        // ================= EDIT PROFILE =================
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton.icon(
+            onPressed: _showEditProfileDialog,
+            icon: Icon(
+              Icons.edit,
+              color: isDark ? Colors.black : Colors.white,
+            ),
+            label: Text(
+              "Edit Profile",
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                color: isDark ? Colors.black : Colors.white,
+              ),
+            ),
+            style: FilledButton.styleFrom(
+              backgroundColor:
+                  isDark ? Colors.white : const Color(0xFF1E293B),
+              padding: const EdgeInsets.symmetric(vertical: 14),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 24),
+      ],
+    ),
+  ),
+);
+
+  }
+  
+}
+class _ProfileQuickAction extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  const _ProfileQuickAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isDark
+                  ? const Color(0xFF020617)
+                  : Theme.of(context).colorScheme.primary.withOpacity(0.1),
+            ),
+            child: Icon(
+              icon,
+              size: 22,
+              color: isDark
+                  ? Colors.white
+                  : Theme.of(context).colorScheme.primary,
+            ),
           ),
           const SizedBox(height: 6),
-          Text(UserService().userEmail ?? "user@example.com"),
-          const SizedBox(height: 12),
-
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.tertiaryContainer,
-              borderRadius: BorderRadius.circular(20),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: isDark ? Colors.grey.shade300 : Colors.grey.shade700,
             ),
-            child: Text(
-              "CVD Type: $cvdType",
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onTertiaryContainer,
-                fontWeight: FontWeight.w600,
-                fontSize: 12,
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: _showEditProfileDialog,
-            icon: const Icon(Icons.edit),
-            label: const Text("Edit Profile"),
           ),
         ],
       ),
     );
   }
 }
+
