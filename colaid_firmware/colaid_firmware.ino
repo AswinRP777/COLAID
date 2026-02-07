@@ -14,8 +14,14 @@
   Features:
   - BLE UART Server to receive CVD Type from Phone.
   - TCS3200 / TCS34725 Color Sensor Reading.
-  - Buzzer Feedback for problematic colors.
+  - Buzzer Feedback for ALL non-distinguishable colors based on CVD type.
   - Send "Detected Color Name" back to Phone for Audio Feedback.
+  - Comprehensive CVD confusion pair detection.
+
+  CVD Types and Confused Colors:
+  - Protanopia (Red-blind): Red↔Green, Red↔Brown, Orange↔Yellow, Pink↔Gray, Purple↔Blue
+  - Deuteranopia (Green-blind): Green↔Red, Green↔Brown, Orange↔Yellow, Pink↔Gray, Purple↔Blue  
+  - Tritanopia (Blue-blind): Blue↔Green, Yellow↔Pink, Purple↔Red, Orange↔Pink, Cyan↔White
 
   Wiring (Adjust pins as needed):
   - Buzzer: GPIO 4
@@ -28,8 +34,8 @@
 #define BUZZER_PIN 4
 #define LED_PIN 2   // Onboard Blue LED
 
-// Select Sensor Type: 0 = MOCK (No hardware), 1 = TCS34725 (I2C), 2 = TCS3200
-#define SENSOR_TYPE 0 
+// Select Sensor Type: 1 = TCS34725 (I2C), 2 = TCS3200
+#define SENSOR_TYPE 2
 
 // --- TCS3200 Pins ---
 #define S0 18
@@ -83,9 +89,69 @@ const ColorRef validColors[] = {
   {"Brown", 165, 42, 42},
   {"White", 255, 255, 255},
   {"Gray", 128, 128, 128},
-  {"Black", 0, 0, 0}
+  {"Black", 0, 0, 0},
+  {"Lime", 0, 128, 0},
+  {"Teal", 0, 128, 128},
+  {"Olive", 128, 128, 0},
+  {"Maroon", 128, 0, 0},
+  {"Navy", 0, 0, 128}
 };
 const int colorCount = sizeof(validColors) / sizeof(validColors[0]);
+
+// --- CVD CONFUSION PAIRS ---
+// These define which colors are confused with each other for each CVD type
+// Each pair represents colors that appear similar to someone with that CVD type
+
+// Protanopia (Red-blind) - Reduced sensitivity to red light
+// Confuses colors along the red-green axis
+const String protanopiaConfused[] = {
+  "Red", "Green", "Brown", "Orange", "Olive", "Maroon", "Lime",  // Red-Green confusion group
+  "Pink", "Gray", "White",  // Pink appears grayish
+  "Purple", "Blue", "Navy",  // Purple appears bluish
+  "Cyan", "White"  // Saturated colors appear washed out
+};
+const int protanopiaConfusedCount = 14;
+
+// Deuteranopia (Green-blind) - Reduced sensitivity to green light
+// Very similar to protanopia but slightly different perception
+const String deuteranopiaConfused[] = {
+  "Red", "Green", "Brown", "Orange", "Olive", "Maroon", "Lime",  // Red-Green confusion group
+  "Pink", "Gray", "White",  // Pink appears grayish
+  "Purple", "Blue", "Navy",  // Purple appears bluish
+  "Yellow", "Lime"  // Yellow-green confusion
+};
+const int deuteranopiaConfusedCount = 14;
+
+// Tritanopia (Blue-blind) - Reduced sensitivity to blue light
+// Confuses colors along the blue-yellow axis
+const String tritanopiaConfused[] = {
+  "Blue", "Green", "Teal", "Cyan",  // Blue-Green confusion
+  "Yellow", "Pink", "Orange", "White",  // Yellow appears pinkish/light
+  "Purple", "Red", "Maroon", "Magenta",  // Purple appears reddish
+  "Navy", "Black", "Gray"  // Dark blues appear very dark
+};
+const int tritanopiaConfusedCount = 15;
+
+// Severity levels for different confusion types
+// 1 = mild confusion, 2 = moderate, 3 = severe
+int getConfusionSeverity(String color, String cvd) {
+  // Severe confusions (most problematic)
+  if (cvd == "protanopia" || cvd == "deuteranopia") {
+    if (color == "Red" || color == "Green") return 3;
+    if (color == "Brown" || color == "Olive") return 3;
+    if (color == "Orange" || color == "Maroon") return 2;
+    if (color == "Pink" || color == "Purple") return 2;
+    if (color == "Lime") return 2;
+  }
+  if (cvd == "tritanopia") {
+    if (color == "Blue" || color == "Yellow") return 3;
+    if (color == "Purple" || color == "Cyan") return 3;
+    if (color == "Green" || color == "Teal") return 2;
+    if (color == "Pink" || color == "Orange") return 2;
+    if (color == "Navy" || color == "Magenta") return 2;
+  }
+  return 1; // Default mild
+}
 
 // Function to find the closest color
 String getColorName(int r, int g, int b) {
@@ -176,17 +242,13 @@ void setup() {
   digitalWrite(LED_PIN, LOW);
 
   // Sensor Setup
-  if (SENSOR_TYPE == 0) {
-    // MOCK MODE
-    Serial.println("MOCK SENSOR MODE ENABLED");
-    isSensorWorking = true; 
-  } else if (SENSOR_TYPE == 1) {
+  if (SENSOR_TYPE == 1) {
+    // TCS34725 (I2C) setup
     if (tcs.begin()) {
-      Serial.println("Found sensor");
+      Serial.println("TCS34725 sensor found");
       isSensorWorking = true;
     } else {
       Serial.println("No TCS34725 found ... check your connections");
-      // Do NOT halt here, allow BLE to start so we can debug/flash
       isSensorWorking = false;
     }
   } else if (SENSOR_TYPE == 2) {
@@ -195,7 +257,8 @@ void setup() {
     pinMode(S2, OUTPUT); pinMode(S3, OUTPUT);
     pinMode(SENSOR_OUT, INPUT);
     // Set frequency scaling to 20%
-    digitalWrite(S0, HIGH); digitalWrite(S1, LOW); 
+    digitalWrite(S0, HIGH); digitalWrite(S1, LOW);
+    Serial.println("TCS3200 sensor initialized");
     isSensorWorking = true;
   }
 
@@ -250,20 +313,11 @@ void loop() {
 
     // 1. READ COLOR
     if (isSensorWorking) {
-      if (SENSOR_TYPE == 0) {
-         // MOCK DATA
-         unsigned long now = millis();
-         int step = (now / 4000) % 5;
-         if (step == 0) { r=200; g=50; b=50; c=300; }     
-         else if (step == 1) { r=50; g=200; b=50; c=300; } 
-         else if (step == 2) { r=50; g=50; b=200; c=300; } 
-         else if (step == 3) { r=200; g=200; b=50; c=450; } 
-         else { r=150; g=150; b=150; c=450; } 
-         sensorSuccess = true;
-      } else if (SENSOR_TYPE == 1) {
+      if (SENSOR_TYPE == 1) {
+         // TCS34725 (I2C)
          tcs.getRawData(&r, &g, &b, &c);
          sensorSuccess = true;
-      } else {
+      } else if (SENSOR_TYPE == 2) {
          // TCS3200 logic
          digitalWrite(S2, LOW); digitalWrite(S3, LOW);
          uint32_t r_pulse = pulseIn(SENSOR_OUT, LOW);
@@ -290,52 +344,74 @@ void loop() {
     }
 
     // 2. MAP LOGIC - Only if sensor read successful and decent light level
-    // For MOCK mode (TYPE 0), we ignore 'c' > 10 check or ensure mock 'c' is high enough
-    if (sensorSuccess && (SENSOR_TYPE == 0 || c > 10)) { 
+    if (sensorSuccess && c > 10) { 
         detectedColor = getColorName(r, g, b);
     }
 
-    // 3. CVD CHECK - Identify PROBLEM colors
+    // 3. CVD CHECK - Identify PROBLEM colors using comprehensive confusion arrays
     bool problem = false;
+    int severity = 0;
     
-    if (cvdType == "protanopia" || cvdType == "deuteranopia") {
-       if (detectedColor == "Red" || 
-           detectedColor == "Green" || 
-           detectedColor == "Brown" || 
-           detectedColor == "Orange" || 
-           detectedColor == "Pink" || 
-           detectedColor == "Purple") {
+    if (cvdType == "protanopia") {
+      // Check against protanopia confusion colors
+      for (int i = 0; i < protanopiaConfusedCount; i++) {
+        if (detectedColor == protanopiaConfused[i]) {
           problem = true;
-       }
+          severity = getConfusionSeverity(detectedColor, cvdType);
+          break;
+        }
+      }
+    } else if (cvdType == "deuteranopia") {
+      // Check against deuteranopia confusion colors
+      for (int i = 0; i < deuteranopiaConfusedCount; i++) {
+        if (detectedColor == deuteranopiaConfused[i]) {
+          problem = true;
+          severity = getConfusionSeverity(detectedColor, cvdType);
+          break;
+        }
+      }
     } else if (cvdType == "tritanopia") {
-       if (detectedColor == "Blue" || 
-           detectedColor == "Yellow" || 
-           detectedColor == "Green" ||
-           detectedColor == "Purple" ||
-           detectedColor == "Orange" || 
-           detectedColor == "Brown" || 
-           detectedColor == "Pink") {
+      // Check against tritanopia confusion colors
+      for (int i = 0; i < tritanopiaConfusedCount; i++) {
+        if (detectedColor == tritanopiaConfused[i]) {
           problem = true;
-       }
+          severity = getConfusionSeverity(detectedColor, cvdType);
+          break;
+        }
+      }
     }
 
-    // 4. FEEDBACK LOGIC (Strict)
-    // ONLY provide feedback if it is a PROBLEM color AND Audio is enabled
+    // 4. FEEDBACK LOGIC with SEVERITY-BASED BEEPS
+    // Provides different beep patterns based on how severe the color confusion is
+    // Severity 3 = 3 beeps (severe confusion like Red/Green)
+    // Severity 2 = 2 beeps (moderate confusion like Pink/Gray)
+    // Severity 1 = 1 beep (mild confusion)
     if (problem && detectedColor != lastDetectedColor) {
        
-       // Buzzer Feedback 
-       digitalWrite(BUZZER_PIN, HIGH);
-       delay(200);
-       digitalWrite(BUZZER_PIN, LOW);
+       // Buzzer Feedback - Number of beeps based on severity
+       for (int beep = 0; beep < severity; beep++) {
+         digitalWrite(BUZZER_PIN, HIGH);
+         delay(150);  // Beep duration
+         digitalWrite(BUZZER_PIN, LOW);
+         if (beep < severity - 1) {
+           delay(100);  // Gap between beeps
+         }
+       }
        
        // Send to Phone ONLY if Audio is Enabled
        if (audioEnabled) {
-           pTxCharacteristic->setValue(detectedColor.c_str());
+           // Send color name with severity indicator
+           String message = detectedColor;
+           pTxCharacteristic->setValue(message.c_str());
            pTxCharacteristic->notify();
        }
        
+       // Debug output
+       Serial.print("CVD Alert: "); Serial.print(detectedColor);
+       Serial.print(" (Severity: "); Serial.print(severity); Serial.println(")");
+       
        lastDetectedColor = detectedColor;
-       delay(1000); 
+       delay(800);  // Debounce delay
     } else if (!problem) {
        // If NOT a problem color, reset state so we can detect a problem color again later
        if (lastDetectedColor != "") {
