@@ -8,6 +8,15 @@
 #include "Adafruit_TCS34725.h" // Install this library if using TCS34725
 #include <math.h>
 
+// --- A2DP Audio Source (for TWS speakers like Lenscart Phonic) ---
+// Requires: "ESP32-A2DP" library by pschatzmann
+// Install via Arduino Library Manager: Search "ESP32 A2DP" by Phil Schatzmann
+// NOTE: A2DP_ENABLED must be defined before the conditional include
+#define A2DP_ENABLED false
+#if A2DP_ENABLED
+#include "BluetoothA2DPSource.h"
+#endif
+
 /*
   Colaid Eyewear - ESP32 Firmware
   
@@ -79,8 +88,12 @@ typedef struct {
 
 BLEServer *pServer = NULL;
 BLECharacteristic *pTxCharacteristic;
-bool deviceConnected = false;
-bool oldDeviceConnected = false;
+
+// --- MULTI-CONNECTION SUPPORT ---
+// ESP32 supports up to MAX_CONNECTIONS simultaneous BLE clients
+#define MAX_CONNECTIONS 3  // ESP32 default max (can increase to ~9 in sdkconfig)
+uint16_t connectedCount = 0;       // Current number of connected devices
+uint16_t oldConnectedCount = 0;    // Previous count for edge detection
 String cvdType = "none"; // Default: None
 
 // Global settings
@@ -110,6 +123,136 @@ unsigned long lastDisconnectBeep = 0;   // Last time alarm beeped
 #define DISCONNECT_ALARM_INTERVAL 3000  // Beep every 3 seconds
 #define DISCONNECT_ALARM_DURATION 20000 // Keep alarming for 20 seconds
 
+// --- A2DP AUDIO SOURCE (TWS Connection) ---
+// Set to true ONLY if you want ESP32 to connect to TWS for beep tones.
+// Set to false (DEFAULT) when the PHONE connects to TWS for spoken color names.
+// Most TWS earphones only accept ONE audio source at a time.
+// When false: Phone pairs with TWS → Phone TTS speaks color names through earphones
+// When true:  ESP32 pairs with TWS → ESP32 plays beep tones through earphones (no speech)
+// (A2DP_ENABLED is defined near the top of the file, before the #include guard)
+
+// Target TWS device name - change this to match your device
+// Uses case-insensitive partial matching (e.g. "Lenscart" matches "Lenscart Phonic")
+#define TARGET_TWS_NAME "Lenscart"       // Primary name to search for
+#define TARGET_TWS_NAME_ALT "Phonic"     // Alternate name to search for
+
+#if A2DP_ENABLED
+BluetoothA2DPSource a2dp_source;
+#endif
+bool twsConnected = false;               // Track TWS connection status
+unsigned long lastTwsReconnectAttempt = 0;
+#define TWS_RECONNECT_INTERVAL 10000     // Retry connection every 10 seconds
+
+// --- A2DP TONE GENERATION ---
+// Generates sine wave audio to play alert tones through TWS speakers
+#define A2DP_SAMPLE_RATE 44100
+volatile bool a2dpPlayTone = false;
+volatile int a2dpToneFreq = 0;
+volatile int a2dpToneDurationSamples = 0;
+volatile int a2dpToneSamplesPlayed = 0;
+float a2dpTonePhase = 0.0;
+
+// Queue for multiple tones (melodies)
+#define TONE_QUEUE_SIZE 8
+struct ToneRequest {
+  int frequency;
+  int durationMs;
+  int pauseAfterMs;
+};
+ToneRequest toneQueue[TONE_QUEUE_SIZE];
+volatile int toneQueueHead = 0;
+volatile int toneQueueTail = 0;
+volatile int a2dpPauseSamples = 0;
+volatile int a2dpPausePlayed = 0;
+
+// Enqueue a tone to play through A2DP
+void enqueueTone(int freq, int durationMs, int pauseAfterMs = 0) {
+  int next = (toneQueueHead + 1) % TONE_QUEUE_SIZE;
+  if (next != toneQueueTail) {  // Don't overflow
+    toneQueue[toneQueueHead].frequency = freq;
+    toneQueue[toneQueueHead].durationMs = durationMs;
+    toneQueue[toneQueueHead].pauseAfterMs = pauseAfterMs;
+    toneQueueHead = next;
+  }
+}
+
+// Start next tone from queue
+void startNextTone() {
+  if (toneQueueTail != toneQueueHead) {
+    ToneRequest t = toneQueue[toneQueueTail];
+    toneQueueTail = (toneQueueTail + 1) % TONE_QUEUE_SIZE;
+    a2dpToneFreq = t.frequency;
+    a2dpToneDurationSamples = (A2DP_SAMPLE_RATE * t.durationMs) / 1000;
+    a2dpToneSamplesPlayed = 0;
+    a2dpPauseSamples = (A2DP_SAMPLE_RATE * t.pauseAfterMs) / 1000;
+    a2dpPausePlayed = 0;
+    a2dpTonePhase = 0.0;
+    a2dpPlayTone = true;
+  }
+}
+
+#if A2DP_ENABLED
+// A2DP audio data callback - called by Bluetooth stack to get audio frames
+// Generates sine wave tones or silence
+int32_t a2dp_audio_callback(Frame *frame, int32_t frameCount) {
+  for (int i = 0; i < frameCount; i++) {
+    if (a2dpPlayTone && a2dpToneSamplesPlayed < a2dpToneDurationSamples) {
+      // Generate sine wave at requested frequency
+      float sample = sin(2.0 * PI * a2dpTonePhase) * 28000.0;  // ~85% volume
+      int16_t s = (int16_t)sample;
+      frame[i].channel1 = s;
+      frame[i].channel2 = s;
+      a2dpTonePhase += (float)a2dpToneFreq / A2DP_SAMPLE_RATE;
+      if (a2dpTonePhase >= 1.0) a2dpTonePhase -= 1.0;
+      a2dpToneSamplesPlayed++;
+    } else if (a2dpPlayTone && a2dpPausePlayed < a2dpPauseSamples) {
+      // Silence gap between tones in a melody
+      frame[i].channel1 = 0;
+      frame[i].channel2 = 0;
+      a2dpPausePlayed++;
+    } else {
+      // Tone finished - try next in queue or go silent
+      frame[i].channel1 = 0;
+      frame[i].channel2 = 0;
+      if (a2dpPlayTone) {
+        a2dpPlayTone = false;
+        startNextTone();  // Start next queued tone if any
+      }
+    }
+  }
+  return frameCount;
+}
+
+// Device name filter - only connect to target TWS device
+// Returns true if the discovered device name matches our target
+bool tws_device_filter(const char* ssid, esp_bd_addr_t address, int rssi) {
+  if (ssid == nullptr || strlen(ssid) == 0) return false;
+  
+  String name = String(ssid);
+  name.toLowerCase();
+  
+  String target1 = String(TARGET_TWS_NAME);
+  target1.toLowerCase();
+  String target2 = String(TARGET_TWS_NAME_ALT);
+  target2.toLowerCase();
+  
+  bool match = (name.indexOf(target1) >= 0) || (name.indexOf(target2) >= 0);
+  
+  if (match) {
+    Serial.print("[A2DP] Found target TWS: ");
+    Serial.print(ssid);
+    Serial.print(" (RSSI: ");
+    Serial.print(rssi);
+    Serial.println(")");
+  } else {
+    Serial.print("[A2DP] Skipping device: ");
+    Serial.println(ssid);
+  }
+  
+  return match;
+}
+#endif  // A2DP_ENABLED
+
 // --- SENSOR CALIBRATION ---
 // Calibration values for white balance (adjust based on your sensor under white light)
 // Default values assume sensor sees ~equal RGB under white
@@ -137,9 +280,19 @@ unsigned long lastBlinkTime = 0;
 
 // --- SHARP BEEP FUNCTION ---
 // Uses PWM tone generation for louder, sharper sound
+// Also sends tone to TWS via A2DP if connected
 // frequency: Hz (higher = sharper), duration: ms
 void sharpBeep(int frequency, int duration) {
+  // Local buzzer
   ledcWriteTone(BUZZER_PIN, frequency);
+  
+  // Also play through TWS speakers via A2DP (only if A2DP mode is enabled)
+  #if A2DP_ENABLED
+  if (twsConnected) {
+    enqueueTone(frequency, duration);
+  }
+  #endif
+  
   delay(duration);
   ledcWriteTone(BUZZER_PIN, 0);  // Stop tone
 }
@@ -960,26 +1113,42 @@ String getColorNameFromHSV(HSV hsv) {
 }
 
 
-// --- BLE CALLBACKS ---
+// --- BLE CALLBACKS (Multi-Connection) ---
 class MyServerCallbacks: public BLEServerCallbacks {
     void onConnect(BLEServer* pServer) {
-      deviceConnected = true;
-      disconnectedUnexpectedly = false;  // Clear alarm on reconnect
-      Serial.println("Device Connected");
+      connectedCount++;
+      disconnectedUnexpectedly = false;  // Clear alarm on any reconnect
+      Serial.print("Device Connected (total: ");
+      Serial.print(connectedCount);
+      Serial.println(")");
       
       // Play connection success melody
       connectionBeep();
+      
+      // Keep advertising so more devices can connect (up to MAX_CONNECTIONS)
+      if (connectedCount < MAX_CONNECTIONS) {
+        BLEDevice::startAdvertising();
+        Serial.println("Still advertising for more connections...");
+      }
     };
 
     void onDisconnect(BLEServer* pServer) {
-      deviceConnected = false;
-      disconnectedUnexpectedly = true;   // Flag for repeating alarm
-      disconnectTime = millis();
-      lastDisconnectBeep = 0;
-      Serial.println("Device Disconnected - alarm active");
+      if (connectedCount > 0) connectedCount--;
+      Serial.print("Device Disconnected (remaining: ");
+      Serial.print(connectedCount);
+      Serial.println(")");
       
-      // Play disconnection warning melody immediately
-      disconnectionBeep();
+      // Only alarm if ALL devices disconnected
+      if (connectedCount == 0) {
+        disconnectedUnexpectedly = true;
+        disconnectTime = millis();
+        lastDisconnectBeep = 0;
+        Serial.println("All devices disconnected - alarm active");
+        disconnectionBeep();
+      }
+      
+      // Always restart advertising when a slot frees up
+      BLEDevice::startAdvertising();
     }
 };
 
@@ -1001,6 +1170,63 @@ class MyCallbacks: public BLECharacteristicCallbacks {
         } else if (data == "AUDIO_OFF") {
            audioEnabled = false;
            Serial.println("Audio Disabled");
+        }
+        // --- TWS CONTROL COMMANDS (from App) ---
+        else if (data == "TWS_STATUS") {
+           // App requests current TWS connection status
+           String status = twsConnected ? "TWS:CONNECTED" : "TWS:DISCONNECTED";
+           pTxCharacteristic->setValue(status.c_str());
+           pTxCharacteristic->notify();
+           Serial.print("[TWS CMD] Status request -> "); Serial.println(status);
+        }
+        else if (data.startsWith("TWS_VOL:")) {
+           // App sets TWS volume (0-127)
+           int vol = data.substring(8).toInt();
+           vol = constrain(vol, 0, 127);
+           #if A2DP_ENABLED
+           a2dp_source.set_volume(vol);
+           #endif
+           Serial.print("[TWS CMD] Volume set to: "); Serial.println(vol);
+           // Confirm back to app
+           String msg = "TWS:VOL:" + String(vol);
+           pTxCharacteristic->setValue(msg.c_str());
+           pTxCharacteristic->notify();
+        }
+        else if (data == "TWS_DISCONNECT") {
+           // App requests TWS disconnect
+           if (twsConnected) {
+             #if A2DP_ENABLED
+             a2dp_source.disconnect();
+             #endif
+             Serial.println("[TWS CMD] Disconnect requested");
+             pTxCharacteristic->setValue("TWS:DISCONNECTING");
+             pTxCharacteristic->notify();
+           }
+        }
+        else if (data == "TWS_RECONNECT") {
+           // App requests TWS reconnect
+           if (!twsConnected) {
+             Serial.println("[TWS CMD] Reconnect requested");
+             #if A2DP_ENABLED
+             a2dp_source.start(a2dp_audio_callback, tws_device_filter);
+             #endif
+             pTxCharacteristic->setValue("TWS:SCANNING");
+             pTxCharacteristic->notify();
+           }
+        }
+        else if (data == "TWS_TEST") {
+           // App requests a test tone on TWS
+           if (twsConnected) {
+             enqueueTone(1047, 150, 50);  // C5
+             enqueueTone(1319, 150, 50);  // E5
+             enqueueTone(1568, 200);       // G5
+             Serial.println("[TWS CMD] Test tone playing");
+             pTxCharacteristic->setValue("TWS:TEST_PLAYING");
+             pTxCharacteristic->notify();
+           } else {
+             pTxCharacteristic->setValue("TWS:NOT_CONNECTED");
+             pTxCharacteristic->notify();
+           }
         }
         // Handle Calibration Command
         else if (data == "CALIBRATE" || data == "CAL") {
@@ -1116,7 +1342,32 @@ void setup() {
     isSensorWorking = true;
   }
 
-  // BLE Setup
+  // --- A2DP SOURCE SETUP (Classic Bluetooth - connect to TWS speakers) ---
+  #if A2DP_ENABLED
+  Serial.println("[A2DP] A2DP ENABLED - ESP32 will connect to TWS for beep tones");
+  Serial.println("[A2DP] Note: Phone should NOT connect to TWS when A2DP is enabled");
+  Serial.print("[A2DP] Looking for devices matching: ");
+  Serial.print(TARGET_TWS_NAME);
+  Serial.print(" or ");
+  Serial.println(TARGET_TWS_NAME_ALT);
+  
+  a2dp_source.set_volume(100);
+  a2dp_source.set_auto_reconnect(true);
+  a2dp_source.start(a2dp_audio_callback, tws_device_filter);
+  delay(1000);
+  
+  twsConnected = a2dp_source.is_connected();
+  if (twsConnected) {
+    Serial.println("[A2DP] TWS connected!");
+  } else {
+    Serial.println("[A2DP] TWS not found yet - will keep scanning...");
+  }
+  #else
+  Serial.println("[A2DP] A2DP DISABLED - Pair TWS with PHONE for spoken color names");
+  Serial.println("[A2DP] Phone TTS will announce colors through TWS earphones");
+  #endif
+
+  // --- BLE SETUP (for phone communication) ---
   BLEDevice::init("Colaid");
   pServer = BLEDevice::createServer();
   pServer->setCallbacks(new MyServerCallbacks());
@@ -1137,7 +1388,7 @@ void setup() {
   
   pService->start();
   
-  // Start Advertising
+  // Start BLE Advertising
   BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
   pAdvertising->addServiceUUID(SERVICE_UUID);
   pAdvertising->setScanResponse(true);
@@ -1145,22 +1396,29 @@ void setup() {
   pAdvertising->setMinPreferred(0x12);
   BLEDevice::startAdvertising();
   
-  Serial.println("Waiting for BLE connection...");
+  Serial.println("Waiting for BLE connection from phone...");
+  Serial.println("=== Colaid Ready (BLE + A2DP Dual Mode) ===");
 }
 
 void loop() {
   unsigned long currentMillis = millis();
 
   // --- LED STATUS LIGHT LOGIC ---
-  long blinkInterval = deviceConnected ? 2000 : 200; // Slow (2000ms) if connected, Fast (200ms) if not
+  // LED blink speed: solid=all slots full, slow=partial, fast=none connected
+  long blinkInterval;
+  if (connectedCount >= MAX_CONNECTIONS) blinkInterval = 0;       // Solid ON when full
+  else if (connectedCount > 0)          blinkInterval = 2000;    // Slow blink when partially connected
+  else                                  blinkInterval = 200;     // Fast blink when no connections
 
-  if (currentMillis - lastBlinkTime >= blinkInterval) {
+  if (blinkInterval == 0) {
+    digitalWrite(LED_PIN, HIGH);  // Solid on
+  } else if (currentMillis - lastBlinkTime >= blinkInterval) {
     lastBlinkTime = currentMillis;
     ledState = !ledState;
     digitalWrite(LED_PIN, ledState);
   }
 
-  if (deviceConnected) {
+  if (connectedCount > 0) {
     uint16_t r, g, b, c;
     String detectedColor = "Unknown";
     bool sensorSuccess = false;
@@ -1344,20 +1602,16 @@ void loop() {
     }
   }
 
-  // Reconnecting
-  if (!deviceConnected && oldDeviceConnected) {
+  // Reconnecting - detect transitions in connection count
+  if (connectedCount == 0 && oldConnectedCount > 0) {
       delay(500);
       pServer->startAdvertising();
-      Serial.println("Advertising started");
-      oldDeviceConnected = deviceConnected;
+      Serial.println("Advertising started (all disconnected)");
   }
+  oldConnectedCount = connectedCount;
   
-  if (deviceConnected && !oldDeviceConnected) {
-      oldDeviceConnected = deviceConnected;
-  }
-  
-  // === DISCONNECT ALARM - repeating beep while disconnected ===
-  if (disconnectedUnexpectedly && !deviceConnected) {
+  // === DISCONNECT ALARM - repeating beep while ALL devices disconnected ===
+  if (disconnectedUnexpectedly && connectedCount == 0) {
     unsigned long elapsed = millis() - disconnectTime;
     if (elapsed < DISCONNECT_ALARM_DURATION) {
       // Beep every DISCONNECT_ALARM_INTERVAL ms
@@ -1371,5 +1625,44 @@ void loop() {
       disconnectedUnexpectedly = false;
       Serial.println("Disconnect alarm ended - still advertising");
     }
+  }
+
+  // === A2DP TWS CONNECTION MONITORING ===
+  // Track TWS connection state and attempt reconnection if lost
+  #if A2DP_ENABLED
+  bool currentTwsState = a2dp_source.is_connected();
+  #else
+  bool currentTwsState = false;
+  #endif
+  
+  if (currentTwsState && !twsConnected) {
+    // TWS just connected
+    twsConnected = true;
+    Serial.println("[A2DP] TWS speakers connected!");
+    // Play a confirmation tone through TWS
+    enqueueTone(1047, 100, 50);  // C5
+    enqueueTone(1319, 100, 50);  // E5
+    enqueueTone(1568, 150);       // G5
+    // Notify phone app about TWS connection
+    if (connectedCount > 0) {
+      pTxCharacteristic->setValue("TWS:CONNECTED");
+      pTxCharacteristic->notify();
+    }
+  } else if (!currentTwsState && twsConnected) {
+    // TWS just disconnected
+    twsConnected = false;
+    Serial.println("[A2DP] TWS speakers disconnected!");
+    // Notify phone app about TWS disconnection
+    if (connectedCount > 0) {
+      pTxCharacteristic->setValue("TWS:DISCONNECTED");
+      pTxCharacteristic->notify();
+    }
+  }
+  
+  // Periodically retry TWS connection if not connected
+  if (!twsConnected && (millis() - lastTwsReconnectAttempt > TWS_RECONNECT_INTERVAL)) {
+    lastTwsReconnectAttempt = millis();
+    Serial.println("[A2DP] Retrying TWS connection...");
+    // A2DP auto-reconnect handles this, but we log the attempt
   }
 }
