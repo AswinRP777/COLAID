@@ -20,7 +20,10 @@ mongo_client = MongoClient(
     tls=True,
     tlsCAFile=certifi.where()
 )
-db = mongo_client.get_default_database()  # Uses database from connection string
+try:
+    db = mongo_client.get_default_database()  # Uses database from connection string
+except Exception:
+    db = mongo_client.get_database('colaid')  # Fallback to 'colaid' database
 try:
     db.list_collection_names()
     print("MongoDB connected to DB ✅")
