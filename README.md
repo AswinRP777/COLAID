@@ -192,7 +192,7 @@ Colaid/
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/Colaid.git
+git clone https://github.com/aswinrp777/Colaid.git
 cd Colaid
 ```
 
