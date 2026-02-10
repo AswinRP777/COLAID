@@ -1,0 +1,48 @@
+# ========================
+# Colaid Root .gitignore
+# ========================
+
+# --- Environment & Secrets ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+venv/
+.venv/
+env/
+*.egg-info/
+dist/
+build/
+
+# --- IDE ---
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# --- Firebase Credentials (SENSITIVE) ---
+# These files contain API keys and should NOT be in version control.
+# Regenerate them locally with `flutterfire configure`.
+colaid/lib/firebase_options.dart
+colaid/android/app/google-services.json
+colaid/ios/Runner/GoogleService-Info.plist
+colaid/macos/Runner/GoogleService-Info.plist
+
+# --- Flutter Build Artifacts ---
+colaid/build/
+colaid/.dart_tool/
+
+# --- Backend uploads ---
+colaid_backend/uploads/*.png
+colaid_backend/uploads/*.jpg
+colaid_backend/uploads/*.jpeg

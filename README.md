@@ -224,9 +224,9 @@ source venv/bin/activate        # Linux/macOS
 # Install dependencies
 pip install -r requirements.txt
 
-# Create a .env file
-echo "MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/colaid" > .env
-echo "SECRET_KEY=your-secret-key" >> .env
+# Create a .env file from the template and fill in your credentials
+cp .env.example .env
+# Edit .env with your actual MongoDB URI and secret key
 
 # Run the server
 python app.py
