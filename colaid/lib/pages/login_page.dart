@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'dart:ui';
 import 'package:http/http.dart' as http;
@@ -69,6 +70,7 @@ class _LoginPageState extends State<LoginPage>
       setState(() => _loading = false);
 
       if (response.statusCode == 200) {
+        TextInput.finishAutofillContext();
         await UserService().setUserData(email: _email);
         if (!mounted) return;
         await Provider.of<ThemeProvider>(context, listen: false).refresh();
@@ -200,156 +202,171 @@ class _LoginPageState extends State<LoginPage>
                                 ),
                               ],
                             ),
-                            child: Form(
-                              key: _form,
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  // Logo
-                                  Hero(
-                                    tag: 'colaid-logo',
-                                    child: Container(
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: const BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: Colors.white,
-                                      ),
-                                      child: Image.asset(
-                                        'assets/colaid_eye.png',
-                                        width: 64,
-                                      ),
-                                    ),
-                                  ),
-
-                                  const SizedBox(height: 16),
-
-                                  Text(
-                                    'Sign in to ColAid',
-                                    style: TextStyle(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.w800,
-                                      color: titleColor,
-                                    ),
-                                  ),
-
-                                  const SizedBox(height: 24),
-
-                                  TextFormField(
-                                    controller: _emailController,
-                                    style: TextStyle(color: textColor),
-                                    decoration: InputDecoration(
-                                      labelText: 'Email',
-                                      labelStyle: TextStyle(color: labelColor),
-                                    ),
-                                    keyboardType: TextInputType.emailAddress,
-                                    validator: (v) =>
-                                        (v == null || !v.contains('@'))
-                                        ? 'Enter a valid email'
-                                        : null,
-                                    onSaved: (v) => _email = v ?? '',
-                                  ),
-
-                                  const SizedBox(height: 12),
-
-                                  TextFormField(
-                                    style: TextStyle(color: textColor),
-                                    decoration: InputDecoration(
-                                      labelText: 'Password',
-                                      labelStyle: TextStyle(color: labelColor),
-                                      suffixIcon: IconButton(
-                                        icon: Icon(
-                                          _obscure
-                                              ? Icons.visibility_off
-                                              : Icons.visibility,
-                                          color: const Color(0xFF1E293B),
+                            child: AutofillGroup(
+                              child: Form(
+                                key: _form,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    // Logo
+                                    Hero(
+                                      tag: 'colaid-logo',
+                                      child: Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: const BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.white,
                                         ),
-                                        onPressed: () => setState(
-                                          () => _obscure = !_obscure,
+                                        child: Image.asset(
+                                          'assets/colaid_eye.png',
+                                          width: 64,
                                         ),
                                       ),
                                     ),
-                                    obscureText: _obscure,
-                                    validator: (v) =>
-                                        (v == null || v.length < 6)
-                                        ? 'Minimum 6 characters'
-                                        : null,
-                                    onSaved: (v) => _password = v ?? '',
-                                  ),
 
-                                  const SizedBox(height: 24),
+                                    const SizedBox(height: 16),
 
-                                  // Sign in
-                                  SizedBox(
-                                    width: double.infinity,
-                                    child: _loading
-                                        ? const Center(
-                                            child: CircularProgressIndicator(),
-                                          )
-                                        : FilledButton(
-                                            style: FilledButton.styleFrom(
-                                              backgroundColor: isDark
-                                                  ? Colors.white
-                                                  : const Color(0xFF1E293B),
-                                              foregroundColor: isDark
-                                                  ? Colors.black
-                                                  : Colors.white,
-                                            ),
-                                            onPressed: _submit,
-                                            child: const Padding(
-                                              padding: EdgeInsets.symmetric(
-                                                vertical: 14,
+                                    Text(
+                                      'Sign in to ColAid',
+                                      style: TextStyle(
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.w800,
+                                        color: titleColor,
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 24),
+
+                                    TextFormField(
+                                      controller: _emailController,
+                                      style: TextStyle(color: textColor),
+                                      decoration: InputDecoration(
+                                        labelText: 'Email',
+                                        labelStyle: TextStyle(
+                                          color: labelColor,
+                                        ),
+                                      ),
+                                      keyboardType: TextInputType.emailAddress,
+                                      autofillHints: const [
+                                        AutofillHints.email,
+                                        AutofillHints.username,
+                                      ],
+                                      validator: (v) =>
+                                          (v == null || !v.contains('@'))
+                                          ? 'Enter a valid email'
+                                          : null,
+                                      onSaved: (v) => _email = v ?? '',
+                                    ),
+
+                                    const SizedBox(height: 12),
+
+                                    TextFormField(
+                                      autofillHints: const [
+                                        AutofillHints.password,
+                                      ],
+                                      style: TextStyle(color: textColor),
+                                      decoration: InputDecoration(
+                                        labelText: 'Password',
+                                        labelStyle: TextStyle(
+                                          color: labelColor,
+                                        ),
+                                        suffixIcon: IconButton(
+                                          icon: Icon(
+                                            _obscure
+                                                ? Icons.visibility_off
+                                                : Icons.visibility,
+                                            color: const Color(0xFF1E293B),
+                                          ),
+                                          onPressed: () => setState(
+                                            () => _obscure = !_obscure,
+                                          ),
+                                        ),
+                                      ),
+                                      obscureText: _obscure,
+                                      validator: (v) =>
+                                          (v == null || v.length < 6)
+                                          ? 'Minimum 6 characters'
+                                          : null,
+                                      onSaved: (v) => _password = v ?? '',
+                                    ),
+
+                                    const SizedBox(height: 24),
+
+                                    // Sign in
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: _loading
+                                          ? const Center(
+                                              child:
+                                                  CircularProgressIndicator(),
+                                            )
+                                          : FilledButton(
+                                              style: FilledButton.styleFrom(
+                                                backgroundColor: isDark
+                                                    ? Colors.white
+                                                    : const Color(0xFF1E293B),
+                                                foregroundColor: isDark
+                                                    ? Colors.black
+                                                    : Colors.white,
                                               ),
-                                              child: Text(
-                                                'Sign in',
-                                                style: TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w600,
+                                              onPressed: _submit,
+                                              child: const Padding(
+                                                padding: EdgeInsets.symmetric(
+                                                  vertical: 14,
+                                                ),
+                                                child: Text(
+                                                  'Sign in',
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
                                                 ),
                                               ),
                                             ),
-                                          ),
-                                  ),
+                                    ),
 
-                                  const SizedBox(height: 14),
+                                    const SizedBox(height: 14),
 
-                                  // Register link
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        "Don't have an account?",
-                                        style: TextStyle(color: labelColor),
-                                      ),
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.pushReplacementNamed(
-                                            context,
-                                            '/register',
-                                          );
-                                        },
-                                        child: const Text(
-                                          'Register',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w700,
-                                            color: Color(0xFFF97316),
+                                    // Register link
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          "Don't have an account?",
+                                          style: TextStyle(color: labelColor),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.pushReplacementNamed(
+                                              context,
+                                              '/register',
+                                            );
+                                          },
+                                          child: const Text(
+                                            'Register',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w700,
+                                              color: Color(0xFFF97316),
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
+                                      ],
+                                    ),
 
-                                  // Guest
-                                  TextButton(
-                                    onPressed: _loading ? null : _guestLogin,
-                                    child: const Text(
-                                      'Continue as Guest',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        color: Color(0xFFF97316),
+                                    // Guest
+                                    TextButton(
+                                      onPressed: _loading ? null : _guestLogin,
+                                      child: const Text(
+                                        'Continue as Guest',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFFF97316),
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           ),

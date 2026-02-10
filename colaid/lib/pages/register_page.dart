@@ -192,140 +192,147 @@ class _RegisterPageState extends State<RegisterPage>
                                 ),
                               ],
                             ),
-                            child: Form(
-                              key: _form,
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  // Logo (always white)
-                                  Hero(
-                                    tag: 'colaid-logo',
-                                    child: Container(
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: const BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: Colors.white,
-                                      ),
-                                      child: Image.asset(
-                                        'assets/colaid_eye.png',
-                                        width: 64,
-                                      ),
-                                    ),
-                                  ),
-
-                                  const SizedBox(height: 16),
-
-                                  Text(
-                                    'Create your account',
-                                    style: TextStyle(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.w800,
-                                      color: titleColor,
-                                    ),
-                                  ),
-
-                                  const SizedBox(height: 24),
-
-                                  TextFormField(
-                                    style: TextStyle(color: textColor),
-                                    decoration: InputDecoration(
-                                      labelText: 'Email',
-                                      labelStyle: TextStyle(color: labelColor),
-                                    ),
-                                    keyboardType: TextInputType.emailAddress,
-                                    autofillHints: const [
-                                      AutofillHints.email,
-                                      AutofillHints.newUsername,
-                                    ],
-                                    validator: (v) =>
-                                        (v == null || !v.contains('@'))
-                                        ? 'Enter a valid email'
-                                        : null,
-                                    onSaved: (v) => _email = v?.trim() ?? '',
-                                  ),
-
-                                  const SizedBox(height: 12),
-
-                                  TextFormField(
-                                    style: TextStyle(color: textColor),
-                                    decoration: InputDecoration(
-                                      labelText: 'Password',
-                                      labelStyle: TextStyle(color: labelColor),
-                                      helperText:
-                                          'Uppercase, lowercase, number & symbol',
-                                      helperMaxLines: 2,
-                                      errorMaxLines: 6,
-                                      suffixIcon: IconButton(
-                                        icon: Icon(
-                                          _obscure
-                                              ? Icons.visibility_off
-                                              : Icons.visibility,
-                                          color: const Color(0xFF1E293B),
+                            child: AutofillGroup(
+                              child: Form(
+                                key: _form,
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    // Logo (always white)
+                                    Hero(
+                                      tag: 'colaid-logo',
+                                      child: Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: const BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.white,
                                         ),
-                                        onPressed: () => setState(
-                                          () => _obscure = !_obscure,
+                                        child: Image.asset(
+                                          'assets/colaid_eye.png',
+                                          width: 64,
                                         ),
                                       ),
                                     ),
-                                    obscureText: _obscure,
-                                    autofillHints: const [
-                                      AutofillHints.newPassword,
-                                    ],
-                                    validator: _validatePassword,
-                                    onSaved: (v) => _password = v ?? '',
-                                  ),
 
-                                  const SizedBox(height: 24),
+                                    const SizedBox(height: 16),
 
-                                  SizedBox(
-                                    width: double.infinity,
-                                    child: _loading
-                                        ? const Center(
-                                            child: CircularProgressIndicator(),
-                                          )
-                                        : FilledButton(
-                                            style: FilledButton.styleFrom(
-                                              backgroundColor: isDark
-                                                  ? Colors.white
-                                                  : const Color(0xFF1E293B),
-                                              foregroundColor: isDark
-                                                  ? Colors.black
-                                                  : Colors.white,
-                                            ),
-                                            onPressed: _submit,
-                                            child: const Padding(
-                                              padding: EdgeInsets.symmetric(
-                                                vertical: 14,
+                                    Text(
+                                      'Create your account',
+                                      style: TextStyle(
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.w800,
+                                        color: titleColor,
+                                      ),
+                                    ),
+
+                                    const SizedBox(height: 24),
+
+                                    TextFormField(
+                                      style: TextStyle(color: textColor),
+                                      decoration: InputDecoration(
+                                        labelText: 'Email',
+                                        labelStyle: TextStyle(
+                                          color: labelColor,
+                                        ),
+                                      ),
+                                      keyboardType: TextInputType.emailAddress,
+                                      autofillHints: const [
+                                        AutofillHints.email,
+                                        AutofillHints.newUsername,
+                                      ],
+                                      validator: (v) =>
+                                          (v == null || !v.contains('@'))
+                                          ? 'Enter a valid email'
+                                          : null,
+                                      onSaved: (v) => _email = v?.trim() ?? '',
+                                    ),
+
+                                    const SizedBox(height: 12),
+
+                                    TextFormField(
+                                      style: TextStyle(color: textColor),
+                                      decoration: InputDecoration(
+                                        labelText: 'Password',
+                                        labelStyle: TextStyle(
+                                          color: labelColor,
+                                        ),
+                                        helperText:
+                                            'Uppercase, lowercase, number & symbol',
+                                        helperMaxLines: 2,
+                                        errorMaxLines: 6,
+                                        suffixIcon: IconButton(
+                                          icon: Icon(
+                                            _obscure
+                                                ? Icons.visibility_off
+                                                : Icons.visibility,
+                                            color: const Color(0xFF1E293B),
+                                          ),
+                                          onPressed: () => setState(
+                                            () => _obscure = !_obscure,
+                                          ),
+                                        ),
+                                      ),
+                                      obscureText: _obscure,
+                                      autofillHints: const [
+                                        AutofillHints.newPassword,
+                                      ],
+                                      validator: _validatePassword,
+                                      onSaved: (v) => _password = v ?? '',
+                                    ),
+
+                                    const SizedBox(height: 24),
+
+                                    SizedBox(
+                                      width: double.infinity,
+                                      child: _loading
+                                          ? const Center(
+                                              child:
+                                                  CircularProgressIndicator(),
+                                            )
+                                          : FilledButton(
+                                              style: FilledButton.styleFrom(
+                                                backgroundColor: isDark
+                                                    ? Colors.white
+                                                    : const Color(0xFF1E293B),
+                                                foregroundColor: isDark
+                                                    ? Colors.black
+                                                    : Colors.white,
                                               ),
-                                              child: Text(
-                                                'Create account',
-                                                style: TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w600,
+                                              onPressed: _submit,
+                                              child: const Padding(
+                                                padding: EdgeInsets.symmetric(
+                                                  vertical: 14,
+                                                ),
+                                                child: Text(
+                                                  'Create account',
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
                                                 ),
                                               ),
                                             ),
-                                          ),
-                                  ),
+                                    ),
 
-                                  const SizedBox(height: 14),
+                                    const SizedBox(height: 14),
 
-                                  TextButton(
-                                    onPressed: () {
-                                      Navigator.pushReplacementNamed(
-                                        context,
-                                        '/login',
-                                      );
-                                    },
-                                    child: Text(
-                                      'Already have an account? Sign in',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        color: labelColor,
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.pushReplacementNamed(
+                                          context,
+                                          '/login',
+                                        );
+                                      },
+                                      child: Text(
+                                        'Already have an account? Sign in',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          color: labelColor,
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           ),
