@@ -1043,13 +1043,7 @@
                         <td>1</td>
                         <td>LM2596 output filter</td>
                     </tr>
-                    <tr>
-                        <td>C2</td>
-                        <td>Decoupling (opt.)</td>
-                        <td>100nF Ceramic</td>
-                        <td>2</td>
-                        <td>Near ESP32 3V3 &amp; TCS3200 VCC</td>
-                    </tr>
+
                 </tbody>
             </table>
         </div>
@@ -1377,6 +1371,154 @@
                     </tr>
                 </tbody>
             </table>
+        </div>
+
+        <!-- ════════════════════════════════════ -->
+        <!--  ZERO PCB LAYOUT & DIMENSIONS       -->
+        <!-- ════════════════════════════════════ -->
+        <div class="sec">
+            <h2>📐 Zero PCB (Perfboard) Dimensions & Layout</h2>
+
+            <h3 style="color:var(--gn)">Recommended Board Size</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Value</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Board Size</strong></td>
+                        <td><strong>7 × 9 cm</strong> (70 × 90 mm)</td>
+                        <td>Standard zero PCB size, widely available</td>
+                    </tr>
+                    <tr>
+                        <td>Hole Grid</td>
+                        <td>~24 × 33 holes</td>
+                        <td>At 2.54 mm (0.1") standard pitch</td>
+                    </tr>
+                    <tr>
+                        <td>Usable Area</td>
+                        <td>~65 × 85 mm</td>
+                        <td>After 2.5 mm edge clearance on each side</td>
+                    </tr>
+                    <tr>
+                        <td>Mounting Holes</td>
+                        <td>4 × M3 corners</td>
+                        <td>3 mm from each edge (optional)</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 style="color:var(--cy)">Component Footprints on Perfboard</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Component</th>
+                        <th>Physical Size (mm)</th>
+                        <th>Holes Required (W × H)</th>
+                        <th>Placement</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>ESP32 DevKit V1</strong></td>
+                        <td>51 × 25.5 mm</td>
+                        <td>19 × 10 holes (2 rows of 19)</td>
+                        <td>Center of board — use pin headers</td>
+                    </tr>
+                    <tr>
+                        <td><strong>LM2596 Buck Module</strong></td>
+                        <td>43 × 21 mm</td>
+                        <td>17 × 8 holes (4 screw terminals)</td>
+                        <td>Top-left zone — power input section</td>
+                    </tr>
+                    <tr>
+                        <td><strong>200µF Capacitor (C1)</strong></td>
+                        <td>8 mm dia × 12 mm tall</td>
+                        <td>2 holes (2.5 mm lead spacing)</td>
+                        <td>Adjacent to LM2596 output</td>
+                    </tr>
+
+                    <tr>
+                        <td><strong>ON/OFF Switch (SW1)</strong></td>
+                        <td>~12 × 7 mm</td>
+                        <td>3–6 holes (depends on type)</td>
+                        <td>Top edge — accessible from outside</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Passive Buzzer (BZ1)</strong></td>
+                        <td>12 mm dia × 9 mm tall</td>
+                        <td>2 holes (7.6 mm lead spacing)</td>
+                        <td>Right side of ESP32</td>
+                    </tr>
+                    <tr>
+                        <td>TCS3200 Sensor (U2)</td>
+                        <td>28.4 × 28.4 mm</td>
+                        <td><strong>Off-board</strong> — via 8-pin header</td>
+                        <td>Mounted on eyewear frame, ribbon cable</td>
+                    </tr>
+                    <tr>
+                        <td>18650 Battery (BT1)</td>
+                        <td>65 × 18.5 mm (cell)</td>
+                        <td><strong>Off-board</strong> — via 2-pin JST connector</td>
+                        <td>Separate holder on frame arm</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 style="color:var(--ac)">Suggested Layout Zones (Top View)</h3>
+            <div
+                style="background:#0d1117; border:1px solid var(--bd); border-radius:8px; padding:16px; font-family:monospace; font-size:11px; line-height:1.5; overflow-x:auto; color:var(--dm)">
+                <pre style="margin:0; color:var(--dm)">
+     ┌──────────────────────────────────────────────────────────────────┐
+     │  <span style="color:#3fb950">◄─── 70 mm (7 cm) ───►</span>                                        │
+     │                                                                  │
+     │  ┌────────────────────┐  ┌──┐  ┌───────┐                        │
+     │  │   <span style="color:#3fb950">LM2596 Module</span>     │  │<span style="color:#bc8cff">C1</span>│  │  <span style="color:#d29922">SW1</span>  │   ← Power Zone        │
+     │  │   (43 × 21 mm)     │  │  │  │       │                        │
+     │  └────────────────────┘  └──┘  └───────┘                        │  <span style="color:#3fb950">▲</span>
+     │  ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─  <span style="color:#3fb950">3.3V Rail</span>              │  <span style="color:#3fb950">│</span>
+     │  ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─  <span style="color:#666">GND Rail</span>               │  <span style="color:#3fb950">│</span>
+     │                                                                  │  <span style="color:#3fb950">│</span>
+     │  ┌─[<span style="color:#39d4e0">HDR</span>]─┐    ┌───────────────────────────┐   ┌──────┐         │  <span style="color:#3fb950">9</span>
+     │  │TCS3200 │    │                           │   │ <span style="color:#f778ba">BZ1</span>  │         │  <span style="color:#3fb950">0</span>
+     │  │8-Pin   │    │    <span style="color:#58a6ff">ESP32-WROOM-32</span>          │   │Buzzer│         │
+     │  │Header  │    │    <span style="color:#58a6ff">DevKit V1</span>               │   │  ♫   │         │  <span style="color:#3fb950">m</span>
+     │  │(off-   │    │    (51 × 25.5 mm)         │   └──────┘         │  <span style="color:#3fb950">m</span>
+     │  │ board) │    │    19 pins per side        │                    │  <span style="color:#3fb950">│</span>
+     │  └────────┘    │                           │                    │  <span style="color:#3fb950">│</span>
+     │                └───────────────────────────┘                    │  <span style="color:#3fb950">│</span>
+     │                                                                  │  <span style="color:#3fb950">▼</span>
+     │  ┌───[<span style="color:#f85149">JST</span>]──┐   Signal wires on underside                        │
+     │  │Battery    │   (solder-side routing)                           │
+     │  │Connector  │                                                   │
+     │  └───────────┘                                                   │
+     └──────────────────────────────────────────────────────────────────┘
+</pre>
+            </div>
+
+            <h3 style="color:var(--or)">Wiring & Assembly Tips</h3>
+            <ul class="notes">
+                <li><strong>3.3V & GND Rails:</strong> Run continuous solder bridges across 2 full rows near the top of
+                    the board. All power connections tap into these rails.</li>
+                <li><strong>ESP32 Mounting:</strong> Solder 2 × 19-pin female headers. This lets you remove the ESP32
+                    for reprogramming or replacement.</li>
+                <li><strong>TCS3200 Header:</strong> Use an 8-pin female header (or 2 × 4) on the PCB edge. Connect to
+                    the sensor via a ribbon cable / Dupont wires — the sensor sits on the eyewear frame,
+                    <strong>not</strong> on the PCB.
+                </li>
+                <li><strong>Battery Connector:</strong> Use a 2-pin JST-PH connector so the battery (in a separate
+                    holder on the frame arm) can be easily disconnected.</li>
+                <li><strong>Wire Routing:</strong> Route signal wires on the <strong>solder side</strong> (bottom) using
+                    enameled copper wire or bare wire between pads. Keep the component side clean.</li>
+                <li><strong>Keep LM2596 away from ESP32:</strong> The switching regulator generates EMI. Place it at the
+                    far end of the board with the capacitor acting as a buffer.</li>
+                <li><strong>Total Board Weight:</strong> Approximately 15–20g (bare PCB + components, excluding battery
+                    and sensor).</li>
+            </ul>
         </div>
 
     </div>
