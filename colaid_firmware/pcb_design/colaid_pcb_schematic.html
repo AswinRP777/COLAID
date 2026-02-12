@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Colaid Eyewear — PCB Schematic</title>
+    <style>
+        :root {
+            --bg: #0d1117;
+            --sf: #161b22;
+            --bd: #30363d;
+            --tx: #e6edf3;
+            --dm: #8b949e;
+            --ac: #58a6ff;
+            --gn: #3fb950;
+            --rd: #f85149;
+            --or: #d29922;
+            --pu: #bc8cff;
+            --pk: #f778ba;
+            --cy: #39d4e0
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--tx);
+            min-height: 100vh
+        }
+
+        header {
+            background: linear-gradient(135deg, #1a1f29, #0d1117);
+            border-bottom: 1px solid var(--bd);
+            padding: 24px 40px;
+            text-align: center
+        }
+
+        header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            background: linear-gradient(90deg, var(--ac), var(--cy));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 6px
+        }
+
+        header p {
+            color: var(--dm);
+            font-size: 14px
+        }
+
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 30px 20px
+        }
+
+        .schematic-wrap {
+            background: var(--sf);
+            border: 1px solid var(--bd);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+            overflow-x: auto
+        }
+
+        .schematic-wrap h2 {
+            font-size: 18px;
+            margin-bottom: 16px;
+            color: var(--ac)
+        }
+
+        svg.schematic {
+            display: block;
+            margin: 0 auto;
+            width: 100%;
+            max-width: 1400px;
+            height: auto
+        }
+
+        .sec {
+            background: var(--sf);
+            border: 1px solid var(--bd);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 30px
+        }
+
+        .sec h2 {
+            font-size: 18px;
+            margin-bottom: 16px;
+            color: var(--ac)
+        }
+
+        .sec h3 {
+            margin: 20px 0 10px;
+            font-size: 15px
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px
+        }
+
+        th {
+            background: #21262d;
+            padding: 10px 14px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 2px solid var(--bd)
+        }
+
+        td {
+            padding: 9px 14px;
+            border-bottom: 1px solid var(--bd);
+            color: var(--dm)
+        }
+
+        tr:hover td {
+            background: #1c2128;
+            color: var(--tx)
+        }
+
+        .t {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 12px;
+            color: #fff
+        }
+
+        .tp {
+            background: var(--rd)
+        }
+
+        .tg {
+            background: #555
+        }
+
+        .ts {
+            background: var(--gn)
+        }
+
+        .td {
+            background: var(--ac)
+        }
+
+        .tc {
+            background: var(--or)
+        }
+
+        ul.notes {
+            list-style: none;
+            padding: 0
+        }
+
+        ul.notes li {
+            padding: 8px 0 8px 20px;
+            position: relative;
+            color: var(--dm);
+            font-size: 14px;
+            line-height: 1.6
+        }
+
+        ul.notes li::before {
+            content: '▸';
+            position: absolute;
+            left: 0;
+            color: var(--ac)
+        }
+
+        ul.notes li strong {
+            color: var(--tx)
+        }
+
+        .bom td:first-child {
+            font-weight: 600;
+            color: var(--tx)
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Colaid Eyewear — PCB Schematic</h1>
+        <p>ESP32-WROOM-32 · TCS3200 Color Sensor · Buzzer · LM2596 Power Supply · Li-Ion Battery</p>
+    </header>
+
+    <div class="container">
+        <div class="schematic-wrap">
+            <h2>⚡ Full Circuit Schematic</h2>
+            <svg class="schematic" viewBox="0 0 1400 1300" xmlns="http://www.w3.org/2000/svg">
+
+                <!-- ▓▓▓ LAYER 0 — BACKGROUND ▓▓▓ -->
+                <pattern id="g" width="20" height="20" patternUnits="userSpaceOnUse">
+                    <path d="M20 0L0 0 0 20" fill="none" stroke="#1c2128" stroke-width=".5" />
+                </pattern>
+                <rect width="1400" height="1300" fill="url(#g)" />
+
+                <!-- ▓▓▓ LAYER 1 — POWER RAILS (drawn first, behind everything) ▓▓▓ -->
+                <line x1="60" y1="230" x2="1340" y2="230" stroke="#3fb950" stroke-width="3" stroke-dasharray="10,5"
+                    opacity=".6" />
+                <rect x="540" y="219" width="260" height="20" rx="4" fill="#0d1117" />
+                <text x="670" y="234" fill="#3fb950" font-size="13" font-weight="700" text-anchor="middle">━━ 3.3V POWER
+                    RAIL ━━</text>
+
+                <line x1="60" y1="280" x2="1340" y2="280" stroke="#666" stroke-width="3" stroke-dasharray="10,5"
+                    opacity=".6" />
+                <rect x="560" y="269" width="220" height="20" rx="4" fill="#0d1117" />
+                <text x="670" y="284" fill="#666" font-size="13" font-weight="700" text-anchor="middle">━━ GND RAIL
+                    ━━</text>
+
+                <!-- ▓▓▓ LAYER 2 — COMPONENT BOXES ▓▓▓ -->
+
+                <!-- ── Battery ── -->
+                <rect x="40" y="55" width="170" height="90" rx="10" fill="#161b22" stroke="#f85149" stroke-width="2" />
+                <text x="125" y="82" fill="#f85149" font-size="14" font-weight="700" text-anchor="middle">Li-Ion
+                    Battery</text>
+                <text x="125" y="100" fill="#8b949e" font-size="11" text-anchor="middle">3.7V · 18650</text>
+                <text x="125" y="118" fill="#8b949e" font-size="10" text-anchor="middle">2000–3000 mAh</text>
+
+                <!-- ── Switch ── -->
+                <rect x="300" y="65" width="160" height="65" rx="10" fill="#161b22" stroke="#d29922" stroke-width="2" />
+                <text x="380" y="92" fill="#d29922" font-size="13" font-weight="700" text-anchor="middle">ON / OFF
+                    Switch</text>
+                <text x="380" y="110" fill="#8b949e" font-size="10" text-anchor="middle">SPST Toggle / Slide</text>
+
+                <!-- ── LM2596 ── -->
+                <rect x="560" y="45" width="300" height="130" rx="12" fill="#161b22" stroke="#3fb950"
+                    stroke-width="2" />
+                <text x="710" y="72" fill="#3fb950" font-size="15" font-weight="700" text-anchor="middle">LM2596 Buck
+                    Module</text>
+                <text x="710" y="92" fill="#8b949e" font-size="11" text-anchor="middle">Step-Down DC-DC Converter</text>
+                <text x="710" y="110" fill="#8b949e" font-size="10" text-anchor="middle">Input: 4.5–40V → Output: Adjust
+                    to 3.3V</text>
+                <rect x="645" y="120" width="130" height="30" rx="5" fill="#21262d" stroke="#30363d" />
+                <text x="710" y="136" fill="#d29922" font-size="9" font-weight="600" text-anchor="middle">⚠ Adjust POT →
+                    3.3V</text>
+                <text x="710" y="148" fill="#8b949e" font-size="8" text-anchor="middle">Measure before
+                    connecting!</text>
+
+                <!-- ── 200µF Cap ── -->
+                <rect x="960" y="55" width="160" height="90" rx="10" fill="#161b22" stroke="#bc8cff" stroke-width="2" />
+                <text x="1040" y="82" fill="#bc8cff" font-size="13" font-weight="700" text-anchor="middle">C1 200
+                    µF</text>
+                <text x="1040" y="100" fill="#8b949e" font-size="10" text-anchor="middle">Electrolytic Cap</text>
+                <text x="1040" y="117" fill="#8b949e" font-size="9" text-anchor="middle">≥ 16V rated</text>
+
+                <!-- ── ESP32 ── (expanded to show all 38 pins) -->
+                <rect x="500" y="350" width="360" height="830" rx="14" fill="#161b22" stroke="#58a6ff"
+                    stroke-width="2.5" />
+                <rect x="625" y="335" width="110" height="22" rx="5" fill="#21262d" stroke="#58a6ff" stroke-width="1" />
+                <text x="680" y="350" fill="#58a6ff" font-size="9" text-anchor="middle">ANTENNA</text>
+                <text x="680" y="385" fill="#58a6ff" font-size="18" font-weight="700"
+                    text-anchor="middle">ESP32-WROOM-32</text>
+                <text x="680" y="405" fill="#8b949e" font-size="11" text-anchor="middle">38-Pin DevKit V1</text>
+                <!-- Pin number badges -->
+                <rect x="518" y="408" width="80" height="16" rx="3" fill="#21262d" />
+                <text x="558" y="420" fill="#58a6ff" font-size="8" font-weight="600" text-anchor="middle">LEFT
+                    (1-19)</text>
+                <rect x="762" y="408" width="80" height="16" rx="3" fill="#21262d" />
+                <text x="802" y="420" fill="#58a6ff" font-size="8" font-weight="600" text-anchor="middle">RIGHT
+                    (20-38)</text>
+
+                <!-- ── TCS3200 ── -->
+                <rect x="30" y="420" width="260" height="430" rx="12" fill="#161b22" stroke="#39d4e0"
+                    stroke-width="2" />
+                <text x="160" y="452" fill="#39d4e0" font-size="16" font-weight="700"
+                    text-anchor="middle">TCS3200</text>
+                <text x="160" y="474" fill="#8b949e" font-size="11" text-anchor="middle">RGB Color Sensor Module</text>
+                <rect x="105" y="488" width="110" height="38" rx="6" fill="#21262d" stroke="#39d4e0" stroke-width="1" />
+                <text x="160" y="507" fill="#39d4e0" font-size="9" font-weight="600" text-anchor="middle">8 × 8
+                    Photodiode</text>
+                <text x="160" y="519" fill="#8b949e" font-size="8" text-anchor="middle">Array</text>
+
+                <!-- ── Buzzer ── -->
+                <rect x="1100" y="420" width="260" height="220" rx="12" fill="#161b22" stroke="#f778ba"
+                    stroke-width="2" />
+                <text x="1230" y="452" fill="#f778ba" font-size="16" font-weight="700" text-anchor="middle">Buzzer
+                    Module</text>
+                <text x="1230" y="474" fill="#8b949e" font-size="11" text-anchor="middle">Passive Piezo Buzzer</text>
+                <circle cx="1230" cy="530" r="28" fill="none" stroke="#f778ba" stroke-width="1.5" />
+                <circle cx="1230" cy="530" r="12" fill="#f778ba" opacity=".2" />
+                <text x="1230" y="536" fill="#f778ba" font-size="18" text-anchor="middle">♫</text>
+                <path d="M1264,515 Q1276,530 1264,545" fill="none" stroke="#f778ba" stroke-width="1" opacity=".5" />
+                <path d="M1274,508 Q1292,530 1274,552" fill="none" stroke="#f778ba" stroke-width="1" opacity=".3" />
+
+                <!-- Onboard LED label box -->
+                <rect x="900" y="765" width="155" height="36" rx="6" fill="#21262d" stroke="#58a6ff" stroke-width="1" />
+                <text x="977" y="782" fill="#58a6ff" font-size="10" font-weight="600" text-anchor="middle">Onboard Blue
+                    LED</text>
+                <text x="977" y="795" fill="#8b949e" font-size="8" text-anchor="middle">(Built-in, no ext.
+                    wiring)</text>
+
+                <!-- Legend -->
+                <rect x="1100" y="700" width="260" height="260" rx="10" fill="#161b22" stroke="#30363d"
+                    stroke-width="1" />
+                <text x="1230" y="728" fill="#8b949e" font-size="13" font-weight="700"
+                    text-anchor="middle">LEGEND</text>
+                <line x1="1120" y1="750" x2="1160" y2="750" stroke="#f85149" stroke-width="2.5" />
+                <text x="1170" y="754" fill="#8b949e" font-size="10">VCC / Power (+)</text>
+                <line x1="1120" y1="775" x2="1160" y2="775" stroke="#666" stroke-width="2.5" />
+                <text x="1170" y="779" fill="#8b949e" font-size="10">GND / Ground (−)</text>
+                <line x1="1120" y1="800" x2="1160" y2="800" stroke="#3fb950" stroke-width="2.5" />
+                <text x="1170" y="804" fill="#8b949e" font-size="10">3.3V Regulated Rail</text>
+                <line x1="1120" y1="825" x2="1160" y2="825" stroke="#d29922" stroke-width="2.5" />
+                <text x="1170" y="829" fill="#8b949e" font-size="10">Signal / Data Wire</text>
+                <line x1="1120" y1="850" x2="1160" y2="850" stroke="#39d4e0" stroke-width="2.5" />
+                <text x="1170" y="854" fill="#8b949e" font-size="10">TCS3200 ↔ ESP32</text>
+                <line x1="1120" y1="875" x2="1160" y2="875" stroke="#f778ba" stroke-width="2.5" />
+                <text x="1170" y="879" fill="#8b949e" font-size="10">Buzzer Module</text>
+                <line x1="1120" y1="900" x2="1160" y2="900" stroke="#58a6ff" stroke-width="2.5" />
+                <text x="1170" y="904" fill="#8b949e" font-size="10">ESP32 Specific</text>
+                <!-- Extra legend items for pin status -->
+                <circle cx="1140" cy="925" r="5" fill="#3fb950" />
+                <text x="1170" y="929" fill="#8b949e" font-size="10">Active / Connected Pin</text>
+                <circle cx="1140" cy="950" r="4" fill="#30363d" />
+                <text x="1170" y="954" fill="#8b949e" font-size="10">Unused / Available Pin</text>
+
+
+                <!-- ▓▓▓ LAYER 3 — PIN DOTS & LABELS (on top of boxes) ▓▓▓ -->
+
+                <!-- Battery terminals -->
+                <circle cx="210" cy="85" r="6" fill="#f85149" stroke="#0d1117" stroke-width="1.5" /><text x="220" y="82"
+                    fill="#f85149" font-size="10" font-weight="700">+</text>
+                <circle cx="210" cy="125" r="6" fill="#666" stroke="#0d1117" stroke-width="1.5" /><text x="220" y="123"
+                    fill="#666" font-size="10" font-weight="700">−</text>
+
+                <!-- Switch terminals -->
+                <circle cx="300" cy="90" r="6" fill="#d29922" stroke="#0d1117" stroke-width="1.5" /><text x="280" y="83"
+                    fill="#d29922" font-size="9" font-weight="600">IN</text>
+                <circle cx="460" cy="90" r="6" fill="#d29922" stroke="#0d1117" stroke-width="1.5" /><text x="465" y="83"
+                    fill="#d29922" font-size="9" font-weight="600">OUT</text>
+
+                <!-- LM2596 pins -->
+                <circle cx="560" cy="85" r="6" fill="#f85149" stroke="#0d1117" stroke-width="1.5" /><text x="572" y="82"
+                    fill="#f85149" font-size="11" font-weight="600">IN+</text>
+                <circle cx="560" cy="150" r="6" fill="#666" stroke="#0d1117" stroke-width="1.5" /><text x="572" y="153"
+                    fill="#666" font-size="11" font-weight="600">IN−</text>
+                <circle cx="860" cy="85" r="6" fill="#3fb950" stroke="#0d1117" stroke-width="1.5" /><text x="830" y="78"
+                    fill="#3fb950" font-size="11" font-weight="600">OUT+</text>
+                <circle cx="860" cy="150" r="6" fill="#666" stroke="#0d1117" stroke-width="1.5" /><text x="830" y="153"
+                    fill="#666" font-size="11" font-weight="600">OUT−</text>
+
+                <!-- Capacitor terminals -->
+                <circle cx="960" cy="90" r="6" fill="#3fb950" stroke="#0d1117" stroke-width="1.5" /><text x="945" y="85"
+                    fill="#3fb950" font-size="14" font-weight="700" text-anchor="end">+</text>
+                <circle cx="1120" cy="90" r="6" fill="#666" stroke="#0d1117" stroke-width="1.5" /><text x="1132" y="85"
+                    fill="#666" font-size="14" font-weight="700">−</text>
+
+                <!-- ══════════════════════════════════════════════════ -->
+                <!--  ESP32 LEFT PINS (Pin 1–18, top to bottom)        -->
+                <!--  Spacing: 40px per pin, starting at y=440        -->
+                <!-- ══════════════════════════════════════════════════ -->
+
+                <!-- Pin 1: 3V3 — ACTIVE (power input) -->
+                <circle cx="500" cy="440" r="6" fill="#3fb950" stroke="#0d1117" stroke-width="1.5" />
+                <text x="518" y="444" fill="#3fb950" font-size="11" font-weight="700">3V3</text>
+                <text x="495" y="444" fill="#8b949e" font-size="7" text-anchor="end">1</text>
+
+                <!-- Pin 2: EN (Enable / Reset) -->
+                <circle cx="500" cy="480" r="4" fill="#30363d" />
+                <text x="518" y="484" fill="#30363d" font-size="10">EN</text>
+                <text x="495" y="484" fill="#8b949e" font-size="7" text-anchor="end">2</text>
+
+                <!-- Pin 3: VP / GPIO 36 (input only) -->
+                <circle cx="500" cy="520" r="4" fill="#30363d" />
+                <text x="518" y="524" fill="#30363d" font-size="10">VP (GPIO 36)</text>
+                <text x="495" y="524" fill="#8b949e" font-size="7" text-anchor="end">3</text>
+
+                <!-- Pin 4: VN / GPIO 39 (input only) -->
+                <circle cx="500" cy="560" r="4" fill="#30363d" />
+                <text x="518" y="564" fill="#30363d" font-size="10">VN (GPIO 39)</text>
+                <text x="495" y="564" fill="#8b949e" font-size="7" text-anchor="end">4</text>
+
+                <!-- Pin 5: GPIO 34 (input only) -->
+                <circle cx="500" cy="600" r="4" fill="#30363d" />
+                <text x="518" y="604" fill="#30363d" font-size="10">GPIO 34</text>
+                <text x="495" y="604" fill="#8b949e" font-size="7" text-anchor="end">5</text>
+
+                <!-- Pin 6: GPIO 35 (input only) -->
+                <circle cx="500" cy="640" r="4" fill="#30363d" />
+                <text x="518" y="644" fill="#30363d" font-size="10">GPIO 35</text>
+                <text x="495" y="644" fill="#8b949e" font-size="7" text-anchor="end">6</text>
+
+                <!-- Pin 7: GPIO 32 -->
+                <circle cx="500" cy="680" r="4" fill="#30363d" />
+                <text x="518" y="684" fill="#30363d" font-size="10">GPIO 32</text>
+                <text x="495" y="684" fill="#8b949e" font-size="7" text-anchor="end">7</text>
+
+                <!-- Pin 8: GPIO 33 -->
+                <circle cx="500" cy="720" r="4" fill="#30363d" />
+                <text x="518" y="724" fill="#30363d" font-size="10">GPIO 33</text>
+                <text x="495" y="724" fill="#8b949e" font-size="7" text-anchor="end">8</text>
+
+                <!-- Pin 9: GPIO 25 -->
+                <circle cx="500" cy="760" r="4" fill="#30363d" />
+                <text x="518" y="764" fill="#30363d" font-size="10">GPIO 25</text>
+                <text x="495" y="764" fill="#8b949e" font-size="7" text-anchor="end">9</text>
+
+                <!-- Pin 10: GPIO 26 -->
+                <circle cx="500" cy="800" r="4" fill="#30363d" />
+                <text x="518" y="804" fill="#30363d" font-size="10">GPIO 26</text>
+                <text x="495" y="804" fill="#8b949e" font-size="7" text-anchor="end">10</text>
+
+                <!-- Pin 11: GPIO 27 -->
+                <circle cx="500" cy="840" r="4" fill="#30363d" />
+                <text x="518" y="844" fill="#30363d" font-size="10">GPIO 27</text>
+                <text x="495" y="844" fill="#8b949e" font-size="7" text-anchor="end">11</text>
+
+                <!-- Pin 12: GPIO 14 -->
+                <circle cx="500" cy="880" r="4" fill="#30363d" />
+                <text x="518" y="884" fill="#30363d" font-size="10">GPIO 14</text>
+                <text x="495" y="884" fill="#8b949e" font-size="7" text-anchor="end">12</text>
+
+                <!-- Pin 13: GPIO 12 -->
+                <circle cx="500" cy="920" r="4" fill="#30363d" />
+                <text x="518" y="924" fill="#30363d" font-size="10">GPIO 12</text>
+                <text x="495" y="924" fill="#8b949e" font-size="7" text-anchor="end">13</text>
+
+                <!-- Pin 14: GND — ACTIVE (ground) -->
+                <circle cx="500" cy="960" r="6" fill="#666" stroke="#0d1117" stroke-width="1.5" />
+                <text x="518" y="964" fill="#666" font-size="11" font-weight="700">GND</text>
+                <text x="495" y="964" fill="#8b949e" font-size="7" text-anchor="end">14</text>
+
+                <!-- Pin 15: GPIO 13 -->
+                <circle cx="500" cy="1000" r="4" fill="#30363d" />
+                <text x="518" y="1004" fill="#30363d" font-size="10">GPIO 13</text>
+                <text x="495" y="1004" fill="#8b949e" font-size="7" text-anchor="end">15</text>
+
+                <!-- Pin 16: SD2 / GPIO 9 (flash — do not use) -->
+                <circle cx="500" cy="1040" r="4" fill="#4a3030" />
+                <text x="518" y="1044" fill="#4a3030" font-size="10">SD2 (GPIO 9) ⚠</text>
+                <text x="495" y="1044" fill="#8b949e" font-size="7" text-anchor="end">16</text>
+
+                <!-- Pin 17: SD3 / GPIO 10 (flash — do not use) -->
+                <circle cx="500" cy="1080" r="4" fill="#4a3030" />
+                <text x="518" y="1084" fill="#4a3030" font-size="10">SD3 (GPIO 10) ⚠</text>
+                <text x="495" y="1084" fill="#8b949e" font-size="7" text-anchor="end">17</text>
+
+                <!-- Pin 18: CMD / GPIO 11 (flash — do not use) -->
+                <circle cx="500" cy="1120" r="4" fill="#4a3030" />
+                <text x="518" y="1124" fill="#4a3030" font-size="10">CMD (GPIO 11) ⚠</text>
+                <text x="495" y="1124" fill="#8b949e" font-size="7" text-anchor="end">18</text>
+
+                <!-- ══════════════════════════════════════════════════ -->
+                <!--  ESP32 RIGHT PINS (Pin 19–38, top to bottom)     -->
+                <!--  Spacing: 40px per pin, starting at y=440        -->
+                <!-- ══════════════════════════════════════════════════ -->
+
+                <!-- Pin 38: VIN (5V input) -->
+                <circle cx="860" cy="440" r="4" fill="#30363d" />
+                <text x="840" y="444" fill="#30363d" font-size="10" text-anchor="end">VIN</text>
+                <text x="866" y="444" fill="#8b949e" font-size="7">38</text>
+
+                <!-- Pin 37: GND — ACTIVE -->
+                <circle cx="860" cy="480" r="6" fill="#666" stroke="#0d1117" stroke-width="1.5" />
+                <text x="840" y="484" fill="#666" font-size="11" font-weight="700" text-anchor="end">GND</text>
+                <text x="866" y="484" fill="#8b949e" font-size="7">37</text>
+
+                <!-- Pin 36: GPIO 23 — ACTIVE (TCS3200 OUT) -->
+                <circle cx="860" cy="520" r="6" fill="#39d4e0" stroke="#0d1117" stroke-width="1.5" />
+                <text x="840" y="524" fill="#39d4e0" font-size="11" font-weight="700" text-anchor="end">GPIO 23</text>
+                <text x="866" y="524" fill="#8b949e" font-size="7">36</text>
+
+                <!-- Pin 35: GPIO 22 — ACTIVE (TCS3200 S3) -->
+                <circle cx="860" cy="560" r="6" fill="#39d4e0" stroke="#0d1117" stroke-width="1.5" />
+                <text x="840" y="564" fill="#39d4e0" font-size="11" font-weight="700" text-anchor="end">GPIO 22</text>
+                <text x="866" y="564" fill="#8b949e" font-size="7">35</text>
+
+                <!-- Pin 34: TX0 / GPIO 1 -->
+                <circle cx="860" cy="600" r="4" fill="#30363d" />
+                <text x="840" y="604" fill="#30363d" font-size="10" text-anchor="end">TX0 (GPIO 1)</text>
+                <text x="866" y="604" fill="#8b949e" font-size="7">34</text>
+
+                <!-- Pin 33: RX0 / GPIO 3 -->
+                <circle cx="860" cy="640" r="4" fill="#30363d" />
+                <text x="840" y="644" fill="#30363d" font-size="10" text-anchor="end">RX0 (GPIO 3)</text>
+                <text x="866" y="644" fill="#8b949e" font-size="7">33</text>
+
+                <!-- Pin 32: GPIO 21 — ACTIVE (TCS3200 S2) -->
+                <circle cx="860" cy="680" r="6" fill="#39d4e0" stroke="#0d1117" stroke-width="1.5" />
+                <text x="840" y="684" fill="#39d4e0" font-size="11" font-weight="700" text-anchor="end">GPIO 21</text>
+                <text x="866" y="684" fill="#8b949e" font-size="7">32</text>
+
+                <!-- Pin 31: GND -->
+                <circle cx="860" cy="720" r="4" fill="#30363d" />
+                <text x="840" y="724" fill="#30363d" font-size="10" text-anchor="end">GND</text>
+                <text x="866" y="724" fill="#8b949e" font-size="7">31</text>
+
+                <!-- Pin 30: GPIO 19 — ACTIVE (TCS3200 S1) -->
+                <circle cx="860" cy="760" r="6" fill="#39d4e0" stroke="#0d1117" stroke-width="1.5" />
+                <text x="840" y="764" fill="#39d4e0" font-size="11" font-weight="700" text-anchor="end">GPIO 19</text>
+                <text x="866" y="764" fill="#8b949e" font-size="7">30</text>
+
+                <!-- Pin 29: GPIO 18 — ACTIVE (TCS3200 S0) -->
+                <circle cx="860" cy="800" r="6" fill="#39d4e0" stroke="#0d1117" stroke-width="1.5" />
+                <text x="840" y="804" fill="#39d4e0" font-size="11" font-weight="700" text-anchor="end">GPIO 18</text>
+                <text x="866" y="804" fill="#8b949e" font-size="7">29</text>
+
+                <!-- Pin 28: GPIO 5 -->
+                <circle cx="860" cy="840" r="4" fill="#30363d" />
+                <text x="840" y="844" fill="#30363d" font-size="10" text-anchor="end">GPIO 5</text>
+                <text x="866" y="844" fill="#8b949e" font-size="7">28</text>
+
+                <!-- Pin 27: GPIO 17 -->
+                <circle cx="860" cy="880" r="4" fill="#30363d" />
+                <text x="840" y="884" fill="#30363d" font-size="10" text-anchor="end">GPIO 17</text>
+                <text x="866" y="884" fill="#8b949e" font-size="7">27</text>
+
+                <!-- Pin 26: GPIO 16 -->
+                <circle cx="860" cy="920" r="4" fill="#30363d" />
+                <text x="840" y="924" fill="#30363d" font-size="10" text-anchor="end">GPIO 16</text>
+                <text x="866" y="924" fill="#8b949e" font-size="7">26</text>
+
+                <!-- Pin 25: GPIO 4 — ACTIVE (Buzzer SIG) -->
+                <circle cx="860" cy="960" r="6" fill="#d29922" stroke="#0d1117" stroke-width="1.5" />
+                <text x="840" y="964" fill="#d29922" font-size="11" font-weight="700" text-anchor="end">GPIO 4</text>
+                <text x="866" y="964" fill="#8b949e" font-size="7">25</text>
+
+                <!-- Pin 24: GPIO 0 (boot) -->
+                <circle cx="860" cy="1000" r="4" fill="#4a3030" />
+                <text x="840" y="1004" fill="#4a3030" font-size="10" text-anchor="end">GPIO 0 (BOOT)</text>
+                <text x="866" y="1004" fill="#8b949e" font-size="7">24</text>
+
+                <!-- Pin 23: GPIO 2 — ACTIVE (Onboard LED) -->
+                <circle cx="860" cy="1040" r="6" fill="#58a6ff" stroke="#0d1117" stroke-width="1.5" />
+                <text x="840" y="1044" fill="#58a6ff" font-size="11" font-weight="700" text-anchor="end">GPIO 2</text>
+                <text x="866" y="1044" fill="#8b949e" font-size="7">23</text>
+
+                <!-- Pin 22: GPIO 15 -->
+                <circle cx="860" cy="1080" r="4" fill="#30363d" />
+                <text x="840" y="1084" fill="#30363d" font-size="10" text-anchor="end">GPIO 15</text>
+                <text x="866" y="1084" fill="#8b949e" font-size="7">22</text>
+
+                <!-- Pin 21: SD1 / GPIO 8 (flash — do not use) -->
+                <circle cx="860" cy="1120" r="4" fill="#4a3030" />
+                <text x="840" y="1124" fill="#4a3030" font-size="10" text-anchor="end">SD1 (GPIO 8) ⚠</text>
+                <text x="866" y="1124" fill="#8b949e" font-size="7">21</text>
+
+                <!-- Pin 20: SD0 / GPIO 7 (flash — do not use) -->
+                <circle cx="860" cy="1160" r="4" fill="#4a3030" />
+                <text x="840" y="1164" fill="#4a3030" font-size="10" text-anchor="end">SD0 (GPIO 7) ⚠</text>
+                <text x="866" y="1164" fill="#8b949e" font-size="7">20</text>
+
+                <!-- Pin 19: CLK / GPIO 6 (flash — do not use) -->
+                <circle cx="500" cy="1160" r="4" fill="#4a3030" />
+                <text x="518" y="1164" fill="#4a3030" font-size="10">CLK (GPIO 6) ⚠</text>
+                <text x="495" y="1164" fill="#8b949e" font-size="7" text-anchor="end">19</text>
+
+                <!-- ── TCS3200 PINS (right edge of module at x=290) ── -->
+                <circle cx="290" cy="555" r="6" fill="#f85149" stroke="#0d1117" stroke-width="1.5" />
+                <text x="275" y="559" fill="#f85149" font-size="11" font-weight="600" text-anchor="end">VCC</text>
+
+                <circle cx="290" cy="600" r="6" fill="#666" stroke="#0d1117" stroke-width="1.5" />
+                <text x="275" y="604" fill="#666" font-size="11" font-weight="600" text-anchor="end">GND</text>
+
+                <circle cx="290" cy="645" r="6" fill="#666" stroke="#0d1117" stroke-width="1.5" />
+                <text x="275" y="649" fill="#666" font-size="11" font-weight="600" text-anchor="end">OE</text>
+                <text x="160" y="662" fill="#8b949e" font-size="8" text-anchor="middle">(→ GND = always enabled)</text>
+
+                <circle cx="290" cy="700" r="6" fill="#39d4e0" stroke="#0d1117" stroke-width="1.5" />
+                <text x="275" y="704" fill="#39d4e0" font-size="12" font-weight="700" text-anchor="end">S0</text>
+
+                <circle cx="290" cy="745" r="6" fill="#39d4e0" stroke="#0d1117" stroke-width="1.5" />
+                <text x="275" y="749" fill="#39d4e0" font-size="12" font-weight="700" text-anchor="end">S1</text>
+
+                <circle cx="290" cy="790" r="6" fill="#39d4e0" stroke="#0d1117" stroke-width="1.5" />
+                <text x="275" y="794" fill="#39d4e0" font-size="12" font-weight="700" text-anchor="end">S2</text>
+
+                <circle cx="290" cy="835" r="6" fill="#39d4e0" stroke="#0d1117" stroke-width="1.5" />
+                <text x="275" y="839" fill="#39d4e0" font-size="12" font-weight="700" text-anchor="end">S3</text>
+
+                <!-- TCS3200 OUT on the BOTTOM edge of the module -->
+                <circle cx="160" cy="850" r="6" fill="#d29922" stroke="#0d1117" stroke-width="1.5" />
+                <text x="160" y="845" fill="#d29922" font-size="12" font-weight="700" text-anchor="middle">OUT</text>
+
+                <!-- ── Buzzer PINS (left edge at x=1100) ── -->
+                <circle cx="1100" cy="500" r="6" fill="#d29922" stroke="#0d1117" stroke-width="1.5" />
+                <text x="1118" y="504" fill="#d29922" font-size="12" font-weight="600">SIG (+)</text>
+
+                <circle cx="1100" cy="560" r="6" fill="#f85149" stroke="#0d1117" stroke-width="1.5" />
+                <text x="1118" y="564" fill="#f85149" font-size="12" font-weight="600">VCC</text>
+
+                <circle cx="1100" cy="615" r="6" fill="#666" stroke="#0d1117" stroke-width="1.5" />
+                <text x="1118" y="619" fill="#666" font-size="12" font-weight="600">GND (−)</text>
+
+
+                <!-- ▓▓▓ LAYER 4 — ALL WIRES (drawn LAST so they appear on top) ▓▓▓ -->
+
+                <!-- ══════════════════════════════════ -->
+                <!--  POWER SUPPLY WIRING              -->
+                <!-- ══════════════════════════════════ -->
+
+                <!-- Batt+ → Switch IN (straight horizontal) -->
+                <line x1="216" y1="85" x2="294" y2="85" stroke="#f85149" stroke-width="2.5" />
+                <polyline points="290,85 294,85" stroke="#f85149" stroke-width="2.5" />
+                <line x1="294" y1="85" x2="294" y2="90" stroke="#f85149" stroke-width="2.5" />
+
+                <!-- Switch OUT → LM2596 IN+ (straight horizontal) -->
+                <line x1="466" y1="90" x2="500" y2="90" stroke="#f85149" stroke-width="2.5" />
+                <line x1="500" y1="90" x2="500" y2="85" stroke="#f85149" stroke-width="2.5" />
+                <line x1="500" y1="85" x2="554" y2="85" stroke="#f85149" stroke-width="2.5" />
+
+                <!-- Batt− → LM2596 IN−  (route below at y=185) -->
+                <line x1="216" y1="125" x2="240" y2="125" stroke="#666" stroke-width="2" />
+                <line x1="240" y1="125" x2="240" y2="185" stroke="#666" stroke-width="2" />
+                <line x1="240" y1="185" x2="540" y2="185" stroke="#666" stroke-width="2" />
+                <line x1="540" y1="185" x2="540" y2="150" stroke="#666" stroke-width="2" />
+                <line x1="540" y1="150" x2="554" y2="150" stroke="#666" stroke-width="2" />
+                <text x="390" y="180" fill="#666" font-size="9" font-weight="600">GND</text>
+
+                <!-- LM2596 OUT+ → Cap+ -->
+                <line x1="866" y1="85" x2="900" y2="85" stroke="#3fb950" stroke-width="2.5" />
+                <line x1="900" y1="85" x2="900" y2="90" stroke="#3fb950" stroke-width="2.5" />
+                <line x1="900" y1="90" x2="954" y2="90" stroke="#3fb950" stroke-width="2.5" />
+                <text x="910" y="82" fill="#3fb950" font-size="9" font-weight="600">3.3V</text>
+
+                <!-- LM2596 OUT− → Cap−  (route at y=195, separate from IN− route) -->
+                <line x1="866" y1="150" x2="880" y2="150" stroke="#666" stroke-width="2" />
+                <line x1="880" y1="150" x2="880" y2="195" stroke="#666" stroke-width="2" />
+                <line x1="880" y1="195" x2="1140" y2="195" stroke="#666" stroke-width="2" />
+                <line x1="1140" y1="195" x2="1140" y2="90" stroke="#666" stroke-width="2" />
+                <line x1="1140" y1="90" x2="1126" y2="90" stroke="#666" stroke-width="2" />
+
+                <!-- Cap+ drop to 3.3V Rail -->
+                <line x1="1040" y1="145" x2="1040" y2="230" stroke="#3fb950" stroke-width="2.5" />
+                <circle cx="1040" cy="230" r="5" fill="#3fb950" />
+
+                <!-- GND drop to GND Rail (from LM2596 OUT− route) -->
+                <line x1="1140" y1="195" x2="1140" y2="280" stroke="#666" stroke-width="2" />
+                <circle cx="1140" cy="280" r="5" fill="#666" />
+                <!-- GND from Battery side too -->
+                <line x1="540" y1="185" x2="540" y2="280" stroke="#666" stroke-width="2" />
+                <circle cx="540" cy="280" r="5" fill="#666" />
+
+                <!-- ══════════════════════════════════ -->
+                <!--  ESP32 POWER CONNECTIONS           -->
+                <!-- ══════════════════════════════════ -->
+
+                <!-- ESP32 3V3 → 3.3V Rail (channel x=460) -->
+                <line x1="494" y1="440" x2="460" y2="440" stroke="#3fb950" stroke-width="2.5" />
+                <line x1="460" y1="440" x2="460" y2="230" stroke="#3fb950" stroke-width="2.5" />
+                <circle cx="460" cy="230" r="5" fill="#3fb950" />
+
+                <!-- ESP32 GND left (Pin 14, y=960) → GND Rail (channel x=470) -->
+                <line x1="494" y1="960" x2="470" y2="960" stroke="#666" stroke-width="2" />
+                <line x1="470" y1="960" x2="470" y2="280" stroke="#666" stroke-width="2" />
+                <circle cx="470" cy="280" r="5" fill="#666" />
+
+                <!-- ESP32 GND right (Pin 37, y=480) → GND Rail (channel x=890) -->
+                <line x1="866" y1="480" x2="890" y2="480" stroke="#666" stroke-width="2" />
+                <line x1="890" y1="480" x2="890" y2="280" stroke="#666" stroke-width="2" />
+                <circle cx="890" cy="280" r="5" fill="#666" />
+
+                <!-- Onboard LED annotation wire (GPIO 2 at Pin 23, y=1040) -->
+                <line x1="900" y1="783" x2="866" y2="1040" stroke="#58a6ff" stroke-width="1" stroke-dasharray="3,2" />
+
+                <!-- ══════════════════════════════════════ -->
+                <!--  TCS3200 → ESP32  SIGNAL WIRES        -->
+                <!--  Pins now on RIGHT side of ESP32      -->
+                <!--  GPIO 18 (Pin 29) y=800               -->
+                <!--  GPIO 19 (Pin 30) y=760               -->
+                <!--  GPIO 21 (Pin 32) y=680               -->
+                <!--  GPIO 22 (Pin 35) y=560               -->
+                <!--  GPIO 23 (Pin 36) y=520               -->
+                <!-- ══════════════════════════════════════ -->
+
+                <!-- TCS3200 VCC → 3.3V Rail (channel x=310) -->
+                <line x1="296" y1="555" x2="310" y2="555" stroke="#f85149" stroke-width="2" />
+                <line x1="310" y1="555" x2="310" y2="230" stroke="#f85149" stroke-width="2" />
+                <circle cx="310" cy="230" r="5" fill="#3fb950" />
+                <text x="303" y="400" fill="#f85149" font-size="8" font-weight="600"
+                    transform="rotate(-90,303,400)">3.3V</text>
+
+                <!-- TCS3200 GND → GND Rail (channel x=325) -->
+                <line x1="296" y1="600" x2="325" y2="600" stroke="#666" stroke-width="2" />
+                <line x1="325" y1="600" x2="325" y2="280" stroke="#666" stroke-width="1.5" />
+                <circle cx="325" cy="280" r="5" fill="#666" />
+
+                <!-- TCS3200 OE → GND Rail (channel x=340) -->
+                <line x1="296" y1="645" x2="340" y2="645" stroke="#666" stroke-width="2" />
+                <line x1="340" y1="645" x2="340" y2="280" stroke="#666" stroke-width="1.5" />
+                <circle cx="340" cy="280" r="5" fill="#666" />
+
+                <!-- S0 → GPIO 18 (Pin 29, right side y=800) — route below ESP32 at y=1220 -->
+                <line x1="296" y1="700" x2="360" y2="700" stroke="#39d4e0" stroke-width="2.5" />
+                <line x1="360" y1="700" x2="360" y2="1220" stroke="#39d4e0" stroke-width="2.5" />
+                <line x1="360" y1="1220" x2="920" y2="1220" stroke="#39d4e0" stroke-width="2.5" />
+                <line x1="920" y1="1220" x2="920" y2="800" stroke="#39d4e0" stroke-width="2.5" />
+                <line x1="920" y1="800" x2="866" y2="800" stroke="#39d4e0" stroke-width="2.5" />
+
+                <!-- S1 → GPIO 19 (Pin 30, right side y=760) — route below at y=1240 -->
+                <line x1="296" y1="745" x2="380" y2="745" stroke="#39d4e0" stroke-width="2.5" />
+                <line x1="380" y1="745" x2="380" y2="1240" stroke="#39d4e0" stroke-width="2.5" />
+                <line x1="380" y1="1240" x2="940" y2="1240" stroke="#39d4e0" stroke-width="2.5" />
+                <line x1="940" y1="1240" x2="940" y2="760" stroke="#39d4e0" stroke-width="2.5" />
+                <line x1="940" y1="760" x2="866" y2="760" stroke="#39d4e0" stroke-width="2.5" />
+
+                <!-- S2 → GPIO 21 (Pin 32, right side y=680) — route below at y=1260 -->
+                <line x1="296" y1="790" x2="400" y2="790" stroke="#39d4e0" stroke-width="2.5" />
+                <line x1="400" y1="790" x2="400" y2="1260" stroke="#39d4e0" stroke-width="2.5" />
+                <line x1="400" y1="1260" x2="960" y2="1260" stroke="#39d4e0" stroke-width="2.5" />
+                <line x1="960" y1="1260" x2="960" y2="680" stroke="#39d4e0" stroke-width="2.5" />
+                <line x1="960" y1="680" x2="866" y2="680" stroke="#39d4e0" stroke-width="2.5" />
+
+                <!-- S3 → GPIO 22 (Pin 35, right side y=560) — route below at y=1280 -->
+                <line x1="296" y1="835" x2="420" y2="835" stroke="#39d4e0" stroke-width="2.5" />
+                <line x1="420" y1="835" x2="420" y2="1280" stroke="#39d4e0" stroke-width="2.5" />
+                <line x1="420" y1="1280" x2="980" y2="1280" stroke="#39d4e0" stroke-width="2.5" />
+                <line x1="980" y1="1280" x2="980" y2="560" stroke="#39d4e0" stroke-width="2.5" />
+                <line x1="980" y1="560" x2="866" y2="560" stroke="#39d4e0" stroke-width="2.5" />
+
+                <!-- OUT → GPIO 23 (Pin 36, right side y=520) — route below at y=1200 -->
+                <line x1="160" y1="856" x2="160" y2="1200" stroke="#d29922" stroke-width="2.5" />
+                <line x1="160" y1="1200" x2="1000" y2="1200" stroke="#d29922" stroke-width="2.5" />
+                <line x1="1000" y1="1200" x2="1000" y2="520" stroke="#d29922" stroke-width="2.5" />
+                <line x1="1000" y1="520" x2="866" y2="520" stroke="#d29922" stroke-width="2.5" />
+
+
+                <!-- ══════════════════════════════════════ -->
+                <!--  ESP32 GPIO 4 → BUZZER SIG            -->
+                <!--  GPIO 4 at Pin 25 (right side, y=960) -->
+                <!--  Route ABOVE to Buzzer                -->
+                <!-- ══════════════════════════════════════ -->
+
+                <line x1="866" y1="960" x2="1020" y2="960" stroke="#d29922" stroke-width="2.5" />
+                <line x1="1020" y1="960" x2="1020" y2="500" stroke="#d29922" stroke-width="2.5" />
+                <line x1="1020" y1="500" x2="1094" y2="500" stroke="#d29922" stroke-width="2.5" />
+
+                <!-- Buzzer VCC → 3.3V Rail (channel x=1070) -->
+                <line x1="1094" y1="560" x2="1070" y2="560" stroke="#f85149" stroke-width="2" />
+                <line x1="1070" y1="560" x2="1070" y2="230" stroke="#f85149" stroke-width="2" />
+                <circle cx="1070" cy="230" r="5" fill="#3fb950" />
+
+                <!-- Buzzer GND → GND Rail (channel x=1080) -->
+                <line x1="1094" y1="615" x2="1080" y2="615" stroke="#666" stroke-width="2" />
+                <line x1="1080" y1="615" x2="1080" y2="280" stroke="#666" stroke-width="2" />
+                <circle cx="1080" cy="280" r="5" fill="#666" />
+
+
+                <!-- ▓▓▓ LAYER 5 — WIRE LABELS (on very top) ▓▓▓ -->
+
+                <!-- Labels on TCS3200 signal wires (on the bottom route) -->
+                <rect x="560" y="1208" width="120" height="16" rx="3" fill="#0d1117" opacity=".85" />
+                <text x="620" y="1220" fill="#39d4e0" font-size="9" font-weight="700" text-anchor="middle">S0 → GPIO
+                    18</text>
+
+                <rect x="560" y="1228" width="120" height="16" rx="3" fill="#0d1117" opacity=".85" />
+                <text x="620" y="1240" fill="#39d4e0" font-size="9" font-weight="700" text-anchor="middle">S1 → GPIO
+                    19</text>
+
+                <rect x="560" y="1248" width="120" height="16" rx="3" fill="#0d1117" opacity=".85" />
+                <text x="620" y="1260" fill="#39d4e0" font-size="9" font-weight="700" text-anchor="middle">S2 → GPIO
+                    21</text>
+
+                <rect x="560" y="1268" width="120" height="16" rx="3" fill="#0d1117" opacity=".85" />
+                <text x="620" y="1280" fill="#39d4e0" font-size="9" font-weight="700" text-anchor="middle">S3 → GPIO
+                    22</text>
+
+                <!-- OUT label on bottom route -->
+                <rect x="460" y="1188" width="120" height="16" rx="3" fill="#0d1117" opacity=".85" />
+                <text x="520" y="1200" fill="#d29922" font-size="10" font-weight="700" text-anchor="middle">OUT → GPIO
+                    23</text>
+
+                <!-- Buzzer signal label -->
+                <rect x="880" y="720" width="130" height="16" rx="3" fill="#0d1117" opacity=".85" />
+                <text x="945" y="732" fill="#d29922" font-size="10" font-weight="700" text-anchor="middle">GPIO 4 →
+                    Buzzer SIG</text>
+
+                <!-- Power label annotations -->
+                <text x="250" y="82" fill="#f85149" font-size="9" font-weight="600">3.7V</text>
+                <text x="480" y="82" fill="#f85149" font-size="9" font-weight="600">→</text>
+
+            </svg>
+        </div>
+
+        <!-- ════════════════════════════════════ -->
+        <!--  CONNECTION TABLES                   -->
+        <!-- ════════════════════════════════════ -->
+        <div class="sec">
+            <h2>📋 Complete Pin Connection Table</h2>
+            <h3 style="color:#39d4e0">TCS3200 RGB Color Sensor → ESP32</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>TCS3200 Pin</th>
+                        <th>Function</th>
+                        <th>ESP32 Pin</th>
+                        <th>ESP32 GPIO</th>
+                        <th>Wire Color</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>VCC</td>
+                        <td><span class="t tp">Power 3.3V</span></td>
+                        <td>3V3</td>
+                        <td>—</td>
+                        <td>🔴 Red</td>
+                    </tr>
+                    <tr>
+                        <td>GND</td>
+                        <td><span class="t tg">Ground</span></td>
+                        <td>GND</td>
+                        <td>—</td>
+                        <td>⚫ Black</td>
+                    </tr>
+                    <tr>
+                        <td>OE</td>
+                        <td><span class="t tg">Output Enable (Active LOW)</span></td>
+                        <td>GND</td>
+                        <td>—</td>
+                        <td>⚫ Black (tie to GND)</td>
+                    </tr>
+                    <tr>
+                        <td>S0</td>
+                        <td><span class="t ts">Frequency Scaling</span></td>
+                        <td>D18</td>
+                        <td><strong>GPIO 18</strong></td>
+                        <td>🟢 Green</td>
+                    </tr>
+                    <tr>
+                        <td>S1</td>
+                        <td><span class="t ts">Frequency Scaling</span></td>
+                        <td>D19</td>
+                        <td><strong>GPIO 19</strong></td>
+                        <td>🔵 Blue</td>
+                    </tr>
+                    <tr>
+                        <td>S2</td>
+                        <td><span class="t ts">Photodiode Select</span></td>
+                        <td>D21</td>
+                        <td><strong>GPIO 21</strong></td>
+                        <td>🟡 Yellow</td>
+                    </tr>
+                    <tr>
+                        <td>S3</td>
+                        <td><span class="t ts">Photodiode Select</span></td>
+                        <td>D22</td>
+                        <td><strong>GPIO 22</strong></td>
+                        <td>🟠 Orange</td>
+                    </tr>
+                    <tr>
+                        <td>OUT</td>
+                        <td><span class="t td">Frequency Output</span></td>
+                        <td>D23</td>
+                        <td><strong>GPIO 23</strong></td>
+                        <td>⚪ White</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 style="color:#f778ba">Buzzer Module → ESP32</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Buzzer Pin</th>
+                        <th>Function</th>
+                        <th>ESP32 Pin</th>
+                        <th>ESP32 GPIO</th>
+                        <th>Wire Color</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>SIG (+)</td>
+                        <td><span class="t tc">Signal / PWM</span></td>
+                        <td>D4</td>
+                        <td><strong>GPIO 4</strong></td>
+                        <td>🟡 Yellow</td>
+                    </tr>
+                    <tr>
+                        <td>VCC</td>
+                        <td><span class="t tp">Power 3.3V</span></td>
+                        <td>3V3</td>
+                        <td>—</td>
+                        <td>🔴 Red</td>
+                    </tr>
+                    <tr>
+                        <td>GND (−)</td>
+                        <td><span class="t tg">Ground</span></td>
+                        <td>GND</td>
+                        <td>—</td>
+                        <td>⚫ Black</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 style="color:#3fb950">Power Supply Circuit</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>From</th>
+                        <th>To</th>
+                        <th>Type</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Li-Ion Battery (+)</td>
+                        <td>ON/OFF Switch (IN)</td>
+                        <td><span class="t tp">3.7V</span></td>
+                        <td>Battery positive through switch</td>
+                    </tr>
+                    <tr>
+                        <td>ON/OFF Switch (OUT)</td>
+                        <td>LM2596 IN+</td>
+                        <td><span class="t tp">Switched 3.7V</span></td>
+                        <td>Switch controls power to regulator</td>
+                    </tr>
+                    <tr>
+                        <td>Li-Ion Battery (−)</td>
+                        <td>LM2596 IN−</td>
+                        <td><span class="t tg">GND</span></td>
+                        <td>Common ground</td>
+                    </tr>
+                    <tr>
+                        <td>LM2596 OUT+</td>
+                        <td>200µF Capacitor (+)</td>
+                        <td><span class="t ts">3.3V</span></td>
+                        <td>Adjust LM2596 to 3.3V first!</td>
+                    </tr>
+                    <tr>
+                        <td>LM2596 OUT−</td>
+                        <td>200µF Capacitor (−)</td>
+                        <td><span class="t tg">GND</span></td>
+                        <td>Output filter ground</td>
+                    </tr>
+                    <tr>
+                        <td>Cap+ (3.3V)</td>
+                        <td>ESP32 3V3 / TCS3200 VCC / Buzzer VCC</td>
+                        <td><span class="t ts">3.3V Rail</span></td>
+                        <td>All components share this rail</td>
+                    </tr>
+                    <tr>
+                        <td>LM2596 OUT−</td>
+                        <td>All GND pins</td>
+                        <td><span class="t tg">GND Rail</span></td>
+                        <td>Common ground for everything</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ════════════════════════════════════ -->
+        <!--  DESIGN NOTES                        -->
+        <!-- ════════════════════════════════════ -->
+        <div class="sec">
+            <h2>📝 Design Notes</h2>
+            <ul class="notes">
+                <li><strong>LM2596 Output:</strong> MUST be adjusted to <strong>3.3V</strong> with the onboard
+                    potentiometer. Measure with a multimeter BEFORE connecting the ESP32!</li>
+                <li><strong>200µF Capacitor:</strong> Electrolytic, placed across LM2596 output. Negative (striped) lead
+                    → GND. Use ≥16V rated.</li>
+                <li><strong>ON/OFF Switch:</strong> SPST in series with battery positive, BEFORE the LM2596 input.</li>
+                <li><strong>TCS3200 OE Pin:</strong> Active LOW — tie directly to GND to keep sensor always enabled.
+                </li>
+                <li><strong>TCS3200 Voltage:</strong> Operates at 2.7V–5.5V, so 3.3V is correct. All signals are 3.3V
+                    logic compatible.</li>
+                <li><strong>GPIO 2:</strong> Built-in blue LED on ESP32 DevKit — no external wiring needed.</li>
+                <li><strong>Buzzer:</strong> Firmware uses <code>ledcWriteTone()</code> PWM. <strong>Passive</strong>
+                    piezo buzzer preferred for variable tones.</li>
+                <li><strong>Power Budget:</strong> ESP32 ~240mA, TCS3200 ~2mA, Buzzer ~30mA → ~6-7 hours on 2000 mAh
+                    cell.</li>
+                <li><strong>Do NOT</strong> connect the battery directly to ESP32 VIN/5V. Always use the LM2596
+                    step-down.</li>
+            </ul>
+        </div>
+
+        <!-- ════════════════════════════════════ -->
+        <!--  BOM                                 -->
+        <!-- ════════════════════════════════════ -->
+        <div class="sec bom">
+            <h2>🛒 Bill of Materials</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ref</th>
+                        <th>Component</th>
+                        <th>Value / Part</th>
+                        <th>Qty</th>
+                        <th>Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>U1</td>
+                        <td>Microcontroller</td>
+                        <td>ESP32-WROOM-32 DevKit V1</td>
+                        <td>1</td>
+                        <td>Main controller with BLE</td>
+                    </tr>
+                    <tr>
+                        <td>U2</td>
+                        <td>Color Sensor</td>
+                        <td>TCS3200 RGB Sensor Module</td>
+                        <td>1</td>
+                        <td>8×8 photodiode array</td>
+                    </tr>
+                    <tr>
+                        <td>U3</td>
+                        <td>Step-Down Converter</td>
+                        <td>LM2596 DC-DC Buck Module</td>
+                        <td>1</td>
+                        <td>Adjust pot → 3.3V</td>
+                    </tr>
+                    <tr>
+                        <td>BZ1</td>
+                        <td>Buzzer</td>
+                        <td>Passive Piezo Buzzer</td>
+                        <td>1</td>
+                        <td>3.3V compatible</td>
+                    </tr>
+                    <tr>
+                        <td>BT1</td>
+                        <td>Battery</td>
+                        <td>Li-Ion 18650 3.7V 2000+ mAh</td>
+                        <td>1</td>
+                        <td>With protection circuit</td>
+                    </tr>
+                    <tr>
+                        <td>SW1</td>
+                        <td>Power Switch</td>
+                        <td>SPST Toggle / Slide Switch</td>
+                        <td>1</td>
+                        <td>In series with battery +</td>
+                    </tr>
+                    <tr>
+                        <td>C1</td>
+                        <td>Output Capacitor</td>
+                        <td>200µF Electrolytic ≥16V</td>
+                        <td>1</td>
+                        <td>LM2596 output filter</td>
+                    </tr>
+                    <tr>
+                        <td>C2</td>
+                        <td>Decoupling (opt.)</td>
+                        <td>100nF Ceramic</td>
+                        <td>2</td>
+                        <td>Near ESP32 3V3 &amp; TCS3200 VCC</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ════════════════════════════════════ -->
+        <!--  PIN SUMMARY                         -->
+        <!-- ════════════════════════════════════ -->
+        <div class="sec">
+            <h2>📌 ESP32 Full Pin Map (38-Pin DevKit V1)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Pin #</th>
+                        <th>Label</th>
+                        <th>GPIO</th>
+                        <th>Dir</th>
+                        <th>Connected To</th>
+                        <th>Function / Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td><strong>3V3</strong></td>
+                        <td>—</td>
+                        <td>PWR</td>
+                        <td>LM2596 OUT+</td>
+                        <td>3.3V regulated supply input</td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>EN</td>
+                        <td>—</td>
+                        <td>IN</td>
+                        <td><em>Not connected</em></td>
+                        <td>Enable / Reset pin (active HIGH)</td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>VP</td>
+                        <td>GPIO 36</td>
+                        <td>IN only</td>
+                        <td><em>Available</em></td>
+                        <td>ADC1_CH0 — Input only, no pull-up/down</td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>VN</td>
+                        <td>GPIO 39</td>
+                        <td>IN only</td>
+                        <td><em>Available</em></td>
+                        <td>ADC1_CH3 — Input only, no pull-up/down</td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>D34</td>
+                        <td>GPIO 34</td>
+                        <td>IN only</td>
+                        <td><em>Available</em></td>
+                        <td>ADC1_CH6 — Input only, no pull-up/down</td>
+                    </tr>
+                    <tr>
+                        <td>6</td>
+                        <td>D35</td>
+                        <td>GPIO 35</td>
+                        <td>IN only</td>
+                        <td><em>Available</em></td>
+                        <td>ADC1_CH7 — Input only, no pull-up/down</td>
+                    </tr>
+                    <tr>
+                        <td>7</td>
+                        <td>D32</td>
+                        <td>GPIO 32</td>
+                        <td>I/O</td>
+                        <td><em>Available</em></td>
+                        <td>ADC1_CH4, Touch9, XTAL32</td>
+                    </tr>
+                    <tr>
+                        <td>8</td>
+                        <td>D33</td>
+                        <td>GPIO 33</td>
+                        <td>I/O</td>
+                        <td><em>Available</em></td>
+                        <td>ADC1_CH5, Touch8, XTAL32</td>
+                    </tr>
+                    <tr>
+                        <td>9</td>
+                        <td>D25</td>
+                        <td>GPIO 25</td>
+                        <td>I/O</td>
+                        <td><em>Available</em></td>
+                        <td>ADC2_CH8, DAC1</td>
+                    </tr>
+                    <tr>
+                        <td>10</td>
+                        <td>D26</td>
+                        <td>GPIO 26</td>
+                        <td>I/O</td>
+                        <td><em>Available</em></td>
+                        <td>ADC2_CH9, DAC2</td>
+                    </tr>
+                    <tr>
+                        <td>11</td>
+                        <td>D27</td>
+                        <td>GPIO 27</td>
+                        <td>I/O</td>
+                        <td><em>Available</em></td>
+                        <td>ADC2_CH7, Touch7</td>
+                    </tr>
+                    <tr>
+                        <td>12</td>
+                        <td>D14</td>
+                        <td>GPIO 14</td>
+                        <td>I/O</td>
+                        <td><em>Available</em></td>
+                        <td>ADC2_CH6, Touch6, HSPI_CLK</td>
+                    </tr>
+                    <tr>
+                        <td>13</td>
+                        <td>D12</td>
+                        <td>GPIO 12</td>
+                        <td>I/O</td>
+                        <td><em>Available</em></td>
+                        <td>ADC2_CH5, Touch5 — Must be LOW at boot</td>
+                    </tr>
+                    <tr>
+                        <td>14</td>
+                        <td><strong>GND</strong></td>
+                        <td>—</td>
+                        <td>PWR</td>
+                        <td>Common GND</td>
+                        <td>Ground rail</td>
+                    </tr>
+                    <tr>
+                        <td>15</td>
+                        <td>D13</td>
+                        <td>GPIO 13</td>
+                        <td>I/O</td>
+                        <td><em>Available</em></td>
+                        <td>ADC2_CH4, Touch4, HSPI_MOSI</td>
+                    </tr>
+                    <tr>
+                        <td>16</td>
+                        <td>SD2</td>
+                        <td>GPIO 9</td>
+                        <td>—</td>
+                        <td><span class="t tp">⚠ Flash</span></td>
+                        <td>Internal flash — DO NOT USE</td>
+                    </tr>
+                    <tr>
+                        <td>17</td>
+                        <td>SD3</td>
+                        <td>GPIO 10</td>
+                        <td>—</td>
+                        <td><span class="t tp">⚠ Flash</span></td>
+                        <td>Internal flash — DO NOT USE</td>
+                    </tr>
+                    <tr>
+                        <td>18</td>
+                        <td>CMD</td>
+                        <td>GPIO 11</td>
+                        <td>—</td>
+                        <td><span class="t tp">⚠ Flash</span></td>
+                        <td>Internal flash — DO NOT USE</td>
+                    </tr>
+                    <tr>
+                        <td>19</td>
+                        <td>CLK</td>
+                        <td>GPIO 6</td>
+                        <td>—</td>
+                        <td><span class="t tp">⚠ Flash</span></td>
+                        <td>Internal flash — DO NOT USE</td>
+                    </tr>
+                    <tr>
+                        <td>20</td>
+                        <td>SD0</td>
+                        <td>GPIO 7</td>
+                        <td>—</td>
+                        <td><span class="t tp">⚠ Flash</span></td>
+                        <td>Internal flash — DO NOT USE</td>
+                    </tr>
+                    <tr>
+                        <td>21</td>
+                        <td>SD1</td>
+                        <td>GPIO 8</td>
+                        <td>—</td>
+                        <td><span class="t tp">⚠ Flash</span></td>
+                        <td>Internal flash — DO NOT USE</td>
+                    </tr>
+                    <tr>
+                        <td>22</td>
+                        <td>D15</td>
+                        <td>GPIO 15</td>
+                        <td>I/O</td>
+                        <td><em>Available</em></td>
+                        <td>ADC2_CH3, Touch3, HSPI_SS — HIGH at boot</td>
+                    </tr>
+                    <tr>
+                        <td>23</td>
+                        <td><strong>D2</strong></td>
+                        <td><strong>GPIO 2</strong></td>
+                        <td>OUT</td>
+                        <td>Onboard LED</td>
+                        <td>Built-in blue LED status indicator</td>
+                    </tr>
+                    <tr>
+                        <td>24</td>
+                        <td>D0</td>
+                        <td>GPIO 0</td>
+                        <td>I/O</td>
+                        <td><em>Available (BOOT)</em></td>
+                        <td>Must be HIGH for normal boot — has pull-up</td>
+                    </tr>
+                    <tr>
+                        <td>25</td>
+                        <td><strong>D4</strong></td>
+                        <td><strong>GPIO 4</strong></td>
+                        <td>OUT (PWM)</td>
+                        <td>Buzzer SIG</td>
+                        <td>Tone generation via ledcWriteTone()</td>
+                    </tr>
+                    <tr>
+                        <td>26</td>
+                        <td>D16</td>
+                        <td>GPIO 16</td>
+                        <td>I/O</td>
+                        <td><em>Available</em></td>
+                        <td>UART2_RX</td>
+                    </tr>
+                    <tr>
+                        <td>27</td>
+                        <td>D17</td>
+                        <td>GPIO 17</td>
+                        <td>I/O</td>
+                        <td><em>Available</em></td>
+                        <td>UART2_TX</td>
+                    </tr>
+                    <tr>
+                        <td>28</td>
+                        <td>D5</td>
+                        <td>GPIO 5</td>
+                        <td>I/O</td>
+                        <td><em>Available</em></td>
+                        <td>VSPI_SS — HIGH at boot</td>
+                    </tr>
+                    <tr>
+                        <td>29</td>
+                        <td><strong>D18</strong></td>
+                        <td><strong>GPIO 18</strong></td>
+                        <td>OUT</td>
+                        <td>TCS3200 S0</td>
+                        <td>Freq. scaling bit 0 (HIGH)</td>
+                    </tr>
+                    <tr>
+                        <td>30</td>
+                        <td><strong>D19</strong></td>
+                        <td><strong>GPIO 19</strong></td>
+                        <td>OUT</td>
+                        <td>TCS3200 S1</td>
+                        <td>Freq. scaling bit 1 (LOW → 20%)</td>
+                    </tr>
+                    <tr>
+                        <td>31</td>
+                        <td>GND</td>
+                        <td>—</td>
+                        <td>PWR</td>
+                        <td>Common GND</td>
+                        <td>Additional ground pin</td>
+                    </tr>
+                    <tr>
+                        <td>32</td>
+                        <td><strong>D21</strong></td>
+                        <td><strong>GPIO 21</strong></td>
+                        <td>OUT</td>
+                        <td>TCS3200 S2</td>
+                        <td>Photodiode type select bit 0</td>
+                    </tr>
+                    <tr>
+                        <td>33</td>
+                        <td>RX0</td>
+                        <td>GPIO 3</td>
+                        <td>IN</td>
+                        <td><em>Available (Serial)</em></td>
+                        <td>UART0_RX — Used for USB serial (debugging)</td>
+                    </tr>
+                    <tr>
+                        <td>34</td>
+                        <td>TX0</td>
+                        <td>GPIO 1</td>
+                        <td>OUT</td>
+                        <td><em>Available (Serial)</em></td>
+                        <td>UART0_TX — Used for USB serial (debugging)</td>
+                    </tr>
+                    <tr>
+                        <td>35</td>
+                        <td><strong>D22</strong></td>
+                        <td><strong>GPIO 22</strong></td>
+                        <td>OUT</td>
+                        <td>TCS3200 S3</td>
+                        <td>Photodiode type select bit 1</td>
+                    </tr>
+                    <tr>
+                        <td>36</td>
+                        <td><strong>D23</strong></td>
+                        <td><strong>GPIO 23</strong></td>
+                        <td>IN</td>
+                        <td>TCS3200 OUT</td>
+                        <td>Square wave — freq ∝ light intensity</td>
+                    </tr>
+                    <tr>
+                        <td>37</td>
+                        <td><strong>GND</strong></td>
+                        <td>—</td>
+                        <td>PWR</td>
+                        <td>Common GND</td>
+                        <td>Ground rail</td>
+                    </tr>
+                    <tr>
+                        <td>38</td>
+                        <td>VIN</td>
+                        <td>—</td>
+                        <td>PWR</td>
+                        <td><em>Not connected</em></td>
+                        <td>5V input — NOT USED (using 3V3 instead)</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</body>
+
+</html>
