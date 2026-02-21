@@ -192,7 +192,7 @@
 <body>
     <header>
         <h1>Colaid Eyewear — PCB Schematic</h1>
-        <p>ESP32-WROOM-32 · TCS3200 Color Sensor · Buzzer · LM2596 Power Supply · Li-Ion Battery</p>
+        <p>ESP32-WROOM-32 · TCS3200 Color Sensor · Buzzer · LM2596 Power Supply · 2S Li-Ion Battery</p>
     </header>
 
     <div class="container">
@@ -210,7 +210,7 @@
                 <line x1="60" y1="230" x2="1340" y2="230" stroke="#3fb950" stroke-width="3" stroke-dasharray="10,5"
                     opacity=".6" />
                 <rect x="540" y="219" width="260" height="20" rx="4" fill="#0d1117" />
-                <text x="670" y="234" fill="#3fb950" font-size="13" font-weight="700" text-anchor="middle">━━ 3.3V POWER
+                <text x="670" y="234" fill="#3fb950" font-size="13" font-weight="700" text-anchor="middle">━━ 5V POWER
                     RAIL ━━</text>
 
                 <line x1="60" y1="280" x2="1340" y2="280" stroke="#666" stroke-width="3" stroke-dasharray="10,5"
@@ -223,9 +223,9 @@
 
                 <!-- ── Battery ── -->
                 <rect x="40" y="55" width="170" height="90" rx="10" fill="#161b22" stroke="#f85149" stroke-width="2" />
-                <text x="125" y="82" fill="#f85149" font-size="14" font-weight="700" text-anchor="middle">Li-Ion
+                <text x="125" y="82" fill="#f85149" font-size="14" font-weight="700" text-anchor="middle">2S Li-Ion
                     Battery</text>
-                <text x="125" y="100" fill="#8b949e" font-size="11" text-anchor="middle">3.7V · 18650</text>
+                <text x="125" y="100" fill="#8b949e" font-size="11" text-anchor="middle">7.4V · 2×18650</text>
                 <text x="125" y="118" fill="#8b949e" font-size="10" text-anchor="middle">2000–3000 mAh</text>
 
                 <!-- ── Switch ── -->
@@ -240,20 +240,15 @@
                 <text x="710" y="72" fill="#3fb950" font-size="15" font-weight="700" text-anchor="middle">LM2596 Buck
                     Module</text>
                 <text x="710" y="92" fill="#8b949e" font-size="11" text-anchor="middle">Step-Down DC-DC Converter</text>
-                <text x="710" y="110" fill="#8b949e" font-size="10" text-anchor="middle">Input: 4.5–40V → Output: Adjust
-                    to 3.3V</text>
+                <text x="710" y="110" fill="#8b949e" font-size="10" text-anchor="middle">Input: 7.4V → Output: Adjust
+                    to 5V</text>
                 <rect x="645" y="120" width="130" height="30" rx="5" fill="#21262d" stroke="#30363d" />
                 <text x="710" y="136" fill="#d29922" font-size="9" font-weight="600" text-anchor="middle">⚠ Adjust POT →
-                    3.3V</text>
+                    5V</text>
                 <text x="710" y="148" fill="#8b949e" font-size="8" text-anchor="middle">Measure before
                     connecting!</text>
 
-                <!-- ── 200µF Cap ── -->
-                <rect x="960" y="55" width="160" height="90" rx="10" fill="#161b22" stroke="#bc8cff" stroke-width="2" />
-                <text x="1040" y="82" fill="#bc8cff" font-size="13" font-weight="700" text-anchor="middle">C1 200
-                    µF</text>
-                <text x="1040" y="100" fill="#8b949e" font-size="10" text-anchor="middle">Electrolytic Cap</text>
-                <text x="1040" y="117" fill="#8b949e" font-size="9" text-anchor="middle">≥ 16V rated</text>
+
 
                 <!-- ── ESP32 ── (expanded to show all 38 pins) -->
                 <rect x="500" y="350" width="360" height="830" rx="14" fill="#161b22" stroke="#58a6ff"
@@ -294,12 +289,7 @@
                 <path d="M1264,515 Q1276,530 1264,545" fill="none" stroke="#f778ba" stroke-width="1" opacity=".5" />
                 <path d="M1274,508 Q1292,530 1274,552" fill="none" stroke="#f778ba" stroke-width="1" opacity=".3" />
 
-                <!-- Onboard LED label box -->
-                <rect x="900" y="765" width="155" height="36" rx="6" fill="#21262d" stroke="#58a6ff" stroke-width="1" />
-                <text x="977" y="782" fill="#58a6ff" font-size="10" font-weight="600" text-anchor="middle">Onboard Blue
-                    LED</text>
-                <text x="977" y="795" fill="#8b949e" font-size="8" text-anchor="middle">(Built-in, no ext.
-                    wiring)</text>
+
 
                 <!-- Legend -->
                 <rect x="1100" y="700" width="260" height="260" rx="10" fill="#161b22" stroke="#30363d"
@@ -311,7 +301,7 @@
                 <line x1="1120" y1="775" x2="1160" y2="775" stroke="#666" stroke-width="2.5" />
                 <text x="1170" y="779" fill="#8b949e" font-size="10">GND / Ground (−)</text>
                 <line x1="1120" y1="800" x2="1160" y2="800" stroke="#3fb950" stroke-width="2.5" />
-                <text x="1170" y="804" fill="#8b949e" font-size="10">3.3V Regulated Rail</text>
+                <text x="1170" y="804" fill="#8b949e" font-size="10">5V Regulated Rail</text>
                 <line x1="1120" y1="825" x2="1160" y2="825" stroke="#d29922" stroke-width="2.5" />
                 <text x="1170" y="829" fill="#8b949e" font-size="10">Signal / Data Wire</text>
                 <line x1="1120" y1="850" x2="1160" y2="850" stroke="#39d4e0" stroke-width="2.5" />
@@ -351,20 +341,16 @@
                 <circle cx="860" cy="150" r="6" fill="#666" stroke="#0d1117" stroke-width="1.5" /><text x="830" y="153"
                     fill="#666" font-size="11" font-weight="600">OUT−</text>
 
-                <!-- Capacitor terminals -->
-                <circle cx="960" cy="90" r="6" fill="#3fb950" stroke="#0d1117" stroke-width="1.5" /><text x="945" y="85"
-                    fill="#3fb950" font-size="14" font-weight="700" text-anchor="end">+</text>
-                <circle cx="1120" cy="90" r="6" fill="#666" stroke="#0d1117" stroke-width="1.5" /><text x="1132" y="85"
-                    fill="#666" font-size="14" font-weight="700">−</text>
+
 
                 <!-- ══════════════════════════════════════════════════ -->
                 <!--  ESP32 LEFT PINS (Pin 1–18, top to bottom)        -->
                 <!--  Spacing: 40px per pin, starting at y=440        -->
                 <!-- ══════════════════════════════════════════════════ -->
 
-                <!-- Pin 1: 3V3 — ACTIVE (power input) -->
-                <circle cx="500" cy="440" r="6" fill="#3fb950" stroke="#0d1117" stroke-width="1.5" />
-                <text x="518" y="444" fill="#3fb950" font-size="11" font-weight="700">3V3</text>
+                <!-- Pin 1: 3V3 — NOT USED (power via VIN) -->
+                <circle cx="500" cy="440" r="4" fill="#30363d" />
+                <text x="518" y="444" fill="#30363d" font-size="10">3V3</text>
                 <text x="495" y="444" fill="#8b949e" font-size="7" text-anchor="end">1</text>
 
                 <!-- Pin 2: EN (Enable / Reset) -->
@@ -457,9 +443,9 @@
                 <!--  Spacing: 40px per pin, starting at y=440        -->
                 <!-- ══════════════════════════════════════════════════ -->
 
-                <!-- Pin 38: VIN (5V input) -->
-                <circle cx="860" cy="440" r="4" fill="#30363d" />
-                <text x="840" y="444" fill="#30363d" font-size="10" text-anchor="end">VIN</text>
+                <!-- Pin 38: VIN (5V input) — ACTIVE -->
+                <circle cx="860" cy="440" r="6" fill="#3fb950" stroke="#0d1117" stroke-width="1.5" />
+                <text x="840" y="444" fill="#3fb950" font-size="11" font-weight="700" text-anchor="end">VIN</text>
                 <text x="866" y="444" fill="#8b949e" font-size="7">38</text>
 
                 <!-- Pin 37: GND — ACTIVE -->
@@ -532,9 +518,9 @@
                 <text x="840" y="1004" fill="#4a3030" font-size="10" text-anchor="end">GPIO 0 (BOOT)</text>
                 <text x="866" y="1004" fill="#8b949e" font-size="7">24</text>
 
-                <!-- Pin 23: GPIO 2 — ACTIVE (Onboard LED) -->
-                <circle cx="860" cy="1040" r="6" fill="#58a6ff" stroke="#0d1117" stroke-width="1.5" />
-                <text x="840" y="1044" fill="#58a6ff" font-size="11" font-weight="700" text-anchor="end">GPIO 2</text>
+                <!-- Pin 23: GPIO 2 -->
+                <circle cx="860" cy="1040" r="4" fill="#30363d" />
+                <text x="840" y="1044" fill="#30363d" font-size="10" text-anchor="end">GPIO 2</text>
                 <text x="866" y="1044" fill="#8b949e" font-size="7">23</text>
 
                 <!-- Pin 22: GPIO 15 -->
@@ -619,26 +605,17 @@
                 <line x1="540" y1="150" x2="554" y2="150" stroke="#666" stroke-width="2" />
                 <text x="390" y="180" fill="#666" font-size="9" font-weight="600">GND</text>
 
-                <!-- LM2596 OUT+ → Cap+ -->
+                <!-- LM2596 OUT+ → 5V Rail -->
                 <line x1="866" y1="85" x2="900" y2="85" stroke="#3fb950" stroke-width="2.5" />
-                <line x1="900" y1="85" x2="900" y2="90" stroke="#3fb950" stroke-width="2.5" />
-                <line x1="900" y1="90" x2="954" y2="90" stroke="#3fb950" stroke-width="2.5" />
-                <text x="910" y="82" fill="#3fb950" font-size="9" font-weight="600">3.3V</text>
+                <line x1="900" y1="85" x2="900" y2="230" stroke="#3fb950" stroke-width="2.5" />
+                <circle cx="900" cy="230" r="5" fill="#3fb950" />
+                <text x="910" y="120" fill="#3fb950" font-size="9" font-weight="600">5V</text>
 
-                <!-- LM2596 OUT− → Cap−  (route at y=195, separate from IN− route) -->
+                <!-- LM2596 OUT− → GND Rail -->
                 <line x1="866" y1="150" x2="880" y2="150" stroke="#666" stroke-width="2" />
-                <line x1="880" y1="150" x2="880" y2="195" stroke="#666" stroke-width="2" />
-                <line x1="880" y1="195" x2="1140" y2="195" stroke="#666" stroke-width="2" />
-                <line x1="1140" y1="195" x2="1140" y2="90" stroke="#666" stroke-width="2" />
-                <line x1="1140" y1="90" x2="1126" y2="90" stroke="#666" stroke-width="2" />
+                <line x1="880" y1="150" x2="880" y2="280" stroke="#666" stroke-width="2" />
+                <circle cx="880" cy="280" r="5" fill="#666" />
 
-                <!-- Cap+ drop to 3.3V Rail -->
-                <line x1="1040" y1="145" x2="1040" y2="230" stroke="#3fb950" stroke-width="2.5" />
-                <circle cx="1040" cy="230" r="5" fill="#3fb950" />
-
-                <!-- GND drop to GND Rail (from LM2596 OUT− route) -->
-                <line x1="1140" y1="195" x2="1140" y2="280" stroke="#666" stroke-width="2" />
-                <circle cx="1140" cy="280" r="5" fill="#666" />
                 <!-- GND from Battery side too -->
                 <line x1="540" y1="185" x2="540" y2="280" stroke="#666" stroke-width="2" />
                 <circle cx="540" cy="280" r="5" fill="#666" />
@@ -647,10 +624,10 @@
                 <!--  ESP32 POWER CONNECTIONS           -->
                 <!-- ══════════════════════════════════ -->
 
-                <!-- ESP32 3V3 → 3.3V Rail (channel x=460) -->
-                <line x1="494" y1="440" x2="460" y2="440" stroke="#3fb950" stroke-width="2.5" />
-                <line x1="460" y1="440" x2="460" y2="230" stroke="#3fb950" stroke-width="2.5" />
-                <circle cx="460" cy="230" r="5" fill="#3fb950" />
+                <!-- ESP32 VIN (Pin 38) → 5V Rail (channel x=910) -->
+                <line x1="866" y1="440" x2="910" y2="440" stroke="#3fb950" stroke-width="2.5" />
+                <line x1="910" y1="440" x2="910" y2="230" stroke="#3fb950" stroke-width="2.5" />
+                <circle cx="910" cy="230" r="5" fill="#3fb950" />
 
                 <!-- ESP32 GND left (Pin 14, y=960) → GND Rail (channel x=470) -->
                 <line x1="494" y1="960" x2="470" y2="960" stroke="#666" stroke-width="2" />
@@ -662,8 +639,7 @@
                 <line x1="890" y1="480" x2="890" y2="280" stroke="#666" stroke-width="2" />
                 <circle cx="890" cy="280" r="5" fill="#666" />
 
-                <!-- Onboard LED annotation wire (GPIO 2 at Pin 23, y=1040) -->
-                <line x1="900" y1="783" x2="866" y2="1040" stroke="#58a6ff" stroke-width="1" stroke-dasharray="3,2" />
+
 
                 <!-- ══════════════════════════════════════ -->
                 <!--  TCS3200 → ESP32  SIGNAL WIRES        -->
@@ -675,12 +651,12 @@
                 <!--  GPIO 23 (Pin 36) y=520               -->
                 <!-- ══════════════════════════════════════ -->
 
-                <!-- TCS3200 VCC → 3.3V Rail (channel x=310) -->
+                <!-- TCS3200 VCC → 5V Rail (channel x=310) -->
                 <line x1="296" y1="555" x2="310" y2="555" stroke="#f85149" stroke-width="2" />
                 <line x1="310" y1="555" x2="310" y2="230" stroke="#f85149" stroke-width="2" />
                 <circle cx="310" cy="230" r="5" fill="#3fb950" />
                 <text x="303" y="400" fill="#f85149" font-size="8" font-weight="600"
-                    transform="rotate(-90,303,400)">3.3V</text>
+                    transform="rotate(-90,303,400)">5V</text>
 
                 <!-- TCS3200 GND → GND Rail (channel x=325) -->
                 <line x1="296" y1="600" x2="325" y2="600" stroke="#666" stroke-width="2" />
@@ -737,7 +713,7 @@
                 <line x1="1020" y1="960" x2="1020" y2="500" stroke="#d29922" stroke-width="2.5" />
                 <line x1="1020" y1="500" x2="1094" y2="500" stroke="#d29922" stroke-width="2.5" />
 
-                <!-- Buzzer VCC → 3.3V Rail (channel x=1070) -->
+                <!-- Buzzer VCC → 5V Rail (channel x=1070) -->
                 <line x1="1094" y1="560" x2="1070" y2="560" stroke="#f85149" stroke-width="2" />
                 <line x1="1070" y1="560" x2="1070" y2="230" stroke="#f85149" stroke-width="2" />
                 <circle cx="1070" cy="230" r="5" fill="#3fb950" />
@@ -778,7 +754,7 @@
                     Buzzer SIG</text>
 
                 <!-- Power label annotations -->
-                <text x="250" y="82" fill="#f85149" font-size="9" font-weight="600">3.7V</text>
+                <text x="250" y="82" fill="#f85149" font-size="9" font-weight="600">7.4V</text>
                 <text x="480" y="82" fill="#f85149" font-size="9" font-weight="600">→</text>
 
             </svg>
@@ -803,8 +779,8 @@
                 <tbody>
                     <tr>
                         <td>VCC</td>
-                        <td><span class="t tp">Power 3.3V</span></td>
-                        <td>3V3</td>
+                        <td><span class="t tp">Power 5V</span></td>
+                        <td>5V Rail</td>
                         <td>—</td>
                         <td>🔴 Red</td>
                     </tr>
@@ -881,8 +857,8 @@
                     </tr>
                     <tr>
                         <td>VCC</td>
-                        <td><span class="t tp">Power 3.3V</span></td>
-                        <td>3V3</td>
+                        <td><span class="t tp">Power 5V</span></td>
+                        <td>5V Rail</td>
                         <td>—</td>
                         <td>🔴 Red</td>
                     </tr>
@@ -908,40 +884,28 @@
                 </thead>
                 <tbody>
                     <tr>
-                        <td>Li-Ion Battery (+)</td>
+                        <td>2S Li-Ion Battery (+)</td>
                         <td>ON/OFF Switch (IN)</td>
-                        <td><span class="t tp">3.7V</span></td>
-                        <td>Battery positive through switch</td>
+                        <td><span class="t tp">7.4V</span></td>
+                        <td>2× 3.7V cells in series through switch</td>
                     </tr>
                     <tr>
                         <td>ON/OFF Switch (OUT)</td>
                         <td>LM2596 IN+</td>
-                        <td><span class="t tp">Switched 3.7V</span></td>
+                        <td><span class="t tp">Switched 7.4V</span></td>
                         <td>Switch controls power to regulator</td>
                     </tr>
                     <tr>
-                        <td>Li-Ion Battery (−)</td>
+                        <td>2S Li-Ion Battery (−)</td>
                         <td>LM2596 IN−</td>
                         <td><span class="t tg">GND</span></td>
                         <td>Common ground</td>
                     </tr>
                     <tr>
                         <td>LM2596 OUT+</td>
-                        <td>200µF Capacitor (+)</td>
-                        <td><span class="t ts">3.3V</span></td>
-                        <td>Adjust LM2596 to 3.3V first!</td>
-                    </tr>
-                    <tr>
-                        <td>LM2596 OUT−</td>
-                        <td>200µF Capacitor (−)</td>
-                        <td><span class="t tg">GND</span></td>
-                        <td>Output filter ground</td>
-                    </tr>
-                    <tr>
-                        <td>Cap+ (3.3V)</td>
-                        <td>ESP32 3V3 / TCS3200 VCC / Buzzer VCC</td>
-                        <td><span class="t ts">3.3V Rail</span></td>
-                        <td>All components share this rail</td>
+                        <td>ESP32 VIN / TCS3200 VCC / Buzzer VCC</td>
+                        <td><span class="t ts">5V Rail</span></td>
+                        <td>Adjust LM2596 to 5V first! All components share this rail</td>
                     </tr>
                     <tr>
                         <td>LM2596 OUT−</td>
@@ -959,22 +923,23 @@
         <div class="sec">
             <h2>📝 Design Notes</h2>
             <ul class="notes">
-                <li><strong>LM2596 Output:</strong> MUST be adjusted to <strong>3.3V</strong> with the onboard
+                <li><strong>LM2596 Output:</strong> MUST be adjusted to <strong>5V</strong> with the onboard
                     potentiometer. Measure with a multimeter BEFORE connecting the ESP32!</li>
-                <li><strong>200µF Capacitor:</strong> Electrolytic, placed across LM2596 output. Negative (striped) lead
-                    → GND. Use ≥16V rated.</li>
+
                 <li><strong>ON/OFF Switch:</strong> SPST in series with battery positive, BEFORE the LM2596 input.</li>
                 <li><strong>TCS3200 OE Pin:</strong> Active LOW — tie directly to GND to keep sensor always enabled.
                 </li>
-                <li><strong>TCS3200 Voltage:</strong> Operates at 2.7V–5.5V, so 3.3V is correct. All signals are 3.3V
-                    logic compatible.</li>
-                <li><strong>GPIO 2:</strong> Built-in blue LED on ESP32 DevKit — no external wiring needed.</li>
+                <li><strong>TCS3200 Voltage:</strong> Operates at 2.7V–5.5V, so 5V is within range. ESP32 GPIO
+                    pins are 3.3V logic but tolerate 5V input signals.</li>
+
                 <li><strong>Buzzer:</strong> Firmware uses <code>ledcWriteTone()</code> PWM. <strong>Passive</strong>
                     piezo buzzer preferred for variable tones.</li>
                 <li><strong>Power Budget:</strong> ESP32 ~240mA, TCS3200 ~2mA, Buzzer ~30mA → ~6-7 hours on 2000 mAh
                     cell.</li>
-                <li><strong>Do NOT</strong> connect the battery directly to ESP32 VIN/5V. Always use the LM2596
-                    step-down.</li>
+                <li><strong>Battery:</strong> 2× 18650 Li-Ion cells in series (3.7V + 3.7V = 7.4V). The LM2596
+                    buck converter steps this down to 5V for the entire circuit.</li>
+                <li><strong>Do NOT</strong> connect the 7.4V battery directly to ESP32. Always use the LM2596
+                    step-down to regulate to 5V first.</li>
             </ul>
         </div>
 
@@ -1013,19 +978,19 @@
                         <td>Step-Down Converter</td>
                         <td>LM2596 DC-DC Buck Module</td>
                         <td>1</td>
-                        <td>Adjust pot → 3.3V</td>
+                        <td>Adjust pot → 5V</td>
                     </tr>
                     <tr>
                         <td>BZ1</td>
                         <td>Buzzer</td>
                         <td>Passive Piezo Buzzer</td>
                         <td>1</td>
-                        <td>3.3V compatible</td>
+                        <td>5V compatible</td>
                     </tr>
                     <tr>
                         <td>BT1</td>
                         <td>Battery</td>
-                        <td>Li-Ion 18650 3.7V 2000+ mAh</td>
+                        <td>2× Li-Ion 18650 3.7V (7.4V series) 2000+ mAh</td>
                         <td>1</td>
                         <td>With protection circuit</td>
                     </tr>
@@ -1036,13 +1001,7 @@
                         <td>1</td>
                         <td>In series with battery +</td>
                     </tr>
-                    <tr>
-                        <td>C1</td>
-                        <td>Output Capacitor</td>
-                        <td>200µF Electrolytic ≥16V</td>
-                        <td>1</td>
-                        <td>LM2596 output filter</td>
-                    </tr>
+
 
                 </tbody>
             </table>
@@ -1067,11 +1026,11 @@
                 <tbody>
                     <tr>
                         <td>1</td>
-                        <td><strong>3V3</strong></td>
+                        <td>3V3</td>
                         <td>—</td>
                         <td>PWR</td>
-                        <td>LM2596 OUT+</td>
-                        <td>3.3V regulated supply input</td>
+                        <td><em>Not connected</em></td>
+                        <td>3.3V output — unused (power via VIN)</td>
                     </tr>
                     <tr>
                         <td>2</td>
@@ -1243,11 +1202,11 @@
                     </tr>
                     <tr>
                         <td>23</td>
-                        <td><strong>D2</strong></td>
-                        <td><strong>GPIO 2</strong></td>
-                        <td>OUT</td>
-                        <td>Onboard LED</td>
-                        <td>Built-in blue LED status indicator</td>
+                        <td>D2</td>
+                        <td>GPIO 2</td>
+                        <td>I/O</td>
+                        <td><em>Available</em></td>
+                        <td>ADC2_CH2, Touch2</td>
                     </tr>
                     <tr>
                         <td>24</td>
@@ -1363,11 +1322,11 @@
                     </tr>
                     <tr>
                         <td>38</td>
-                        <td>VIN</td>
+                        <td><strong>VIN</strong></td>
                         <td>—</td>
                         <td>PWR</td>
-                        <td><em>Not connected</em></td>
-                        <td>5V input — NOT USED (using 3V3 instead)</td>
+                        <td>LM2596 OUT+ (5V)</td>
+                        <td>5V regulated supply input from buck converter</td>
                     </tr>
                 </tbody>
             </table>
@@ -1435,12 +1394,7 @@
                         <td>17 × 8 holes (4 screw terminals)</td>
                         <td>Top-left zone — power input section</td>
                     </tr>
-                    <tr>
-                        <td><strong>200µF Capacitor (C1)</strong></td>
-                        <td>8 mm dia × 12 mm tall</td>
-                        <td>2 holes (2.5 mm lead spacing)</td>
-                        <td>Adjacent to LM2596 output</td>
-                    </tr>
+
 
                     <tr>
                         <td><strong>ON/OFF Switch (SW1)</strong></td>
@@ -1476,10 +1430,10 @@
      ┌──────────────────────────────────────────────────────────────────┐
      │  <span style="color:#3fb950">◄─── 70 mm (7 cm) ───►</span>                                        │
      │                                                                  │
-     │  ┌────────────────────┐  ┌──┐  ┌───────┐                        │
-     │  │   <span style="color:#3fb950">LM2596 Module</span>     │  │<span style="color:#bc8cff">C1</span>│  │  <span style="color:#d29922">SW1</span>  │   ← Power Zone        │
-     │  │   (43 × 21 mm)     │  │  │  │       │                        │
-     │  └────────────────────┘  └──┘  └───────┘                        │  <span style="color:#3fb950">▲</span>
+     │  ┌────────────────────┐        ┌───────┐                        │
+     │  │   <span style="color:#3fb950">LM2596 Module</span>     │       │  <span style="color:#d29922">SW1</span>  │   ← Power Zone        │
+     │  │   (43 × 21 mm)     │       │       │                        │
+     │  └────────────────────┘        └───────┘                        │  <span style="color:#3fb950">▲</span>
      │  ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─  <span style="color:#3fb950">3.3V Rail</span>              │  <span style="color:#3fb950">│</span>
      │  ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─  <span style="color:#666">GND Rail</span>               │  <span style="color:#3fb950">│</span>
      │                                                                  │  <span style="color:#3fb950">│</span>
@@ -1515,7 +1469,7 @@
                 <li><strong>Wire Routing:</strong> Route signal wires on the <strong>solder side</strong> (bottom) using
                     enameled copper wire or bare wire between pads. Keep the component side clean.</li>
                 <li><strong>Keep LM2596 away from ESP32:</strong> The switching regulator generates EMI. Place it at the
-                    far end of the board with the capacitor acting as a buffer.</li>
+                    far end of the board, separated from the ESP32.</li>
                 <li><strong>Total Board Weight:</strong> Approximately 15–20g (bare PCB + components, excluding battery
                     and sensor).</li>
             </ul>
