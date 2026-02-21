@@ -1,6 +1,8 @@
-from flask import Flask, request, send_file, jsonify
+from flask import Flask, request, send_file, jsonify, after_this_request
 import cv2
 import os
+import gc
+import uuid
 from daltonize import daltonize
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from pymongo import MongoClient
@@ -69,14 +71,23 @@ def daltonize_api():
     defect = request.form.get("defect", "protanopia")
     print("Defect:", defect)     
 
-    file = request.files["image"]
-    input_path = os.path.join(UPLOAD_FOLDER, "input.png")
-    output_path = os.path.join(UPLOAD_FOLDER, "output.png")
+    # Use unique filenames to prevent concurrent request collisions
+    request_id = uuid.uuid4().hex[:8]
+    input_path = os.path.join(UPLOAD_FOLDER, f"input_{request_id}.png")
+    output_path = os.path.join(UPLOAD_FOLDER, f"output_{request_id}.png")
 
+    file = request.files["image"]
     file.save(input_path)
     print(f"Image saved to {input_path}")         
 
     img = cv2.imread(input_path)
+
+    # Clean up input file immediately after reading
+    try:
+        os.remove(input_path)
+    except OSError:
+        pass
+
     if img is None:
         print("❌ Error: cv2.imread returned None. Image might be corrupt or invalid format.")
         return jsonify({"error": "Invalid image format"}), 400
@@ -86,18 +97,35 @@ def daltonize_api():
     print("Starting processing")
     try:
         result = daltonize(img, defect)
+        del img  # free input image memory
+        gc.collect()
     except Exception as e:
+        del img
+        gc.collect()
         print(f"❌ Error during daltonize: {e}")
         return jsonify({"error": str(e)}), 500
         
     print("Processing done")     
 
     cv2.imwrite(output_path, result)
+    del result  # free output image memory
+    gc.collect()
+
     if not os.path.exists(output_path):
          print("❌ Error: Output file was not written.")
          return jsonify({"error": "Processing failed to save output"}), 500
 
     print(f"Image written to {output_path}, Size: {os.path.getsize(output_path)} bytes")       
+
+    # Clean up output file after sending the response
+    @after_this_request
+    def cleanup(response):
+        try:
+            os.remove(output_path)
+            print(f"🧹 Cleaned up {output_path}")
+        except OSError:
+            pass
+        return response
 
     return send_file(output_path, mimetype="image/png")
 
